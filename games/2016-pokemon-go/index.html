@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>POCKET GO — a 2016 neighborhood stroll</title>
+    <style>
+      :root { color-scheme: dark; }
+      html, body {
+        margin: 0; padding: 0; width: 100%; height: 100%;
+        overflow: hidden; background: #171c36;
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        user-select: none; -webkit-user-select: none;
+      }
+      #app { position: fixed; inset: 0; }
+      #app canvas { display: block; }
+      #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+      #title {
+        position: fixed; inset: 0; z-index: 30; display: flex;
+        flex-direction: column; align-items: center; justify-content: center;
+        background: transparent; pointer-events: auto; cursor: pointer;
+      }
+      #title.hidden { display: none; }
+      .t-logo {
+        font-size: min(12vw, 128px); font-weight: 900; font-style: italic;
+        letter-spacing: 0.02em; line-height: 0.9; text-align: center;
+        color: #fff3d0;
+        text-shadow:
+          0.045em 0.045em 0 #18b8a8,
+          0.09em 0.09em 0 #232a55;
+        transform: skewX(-6deg);
+      }
+      .t-sub {
+        margin-top: 16px; color: #8fe8d8; font-weight: 700;
+        letter-spacing: 0.5em; text-indent: 0.5em; font-size: clamp(10px, 1.6vw, 16px);
+        text-transform: uppercase;
+      }
+      .t-start {
+        margin-top: 46px; color: #232a55; font-weight: 900; font-style: italic;
+        font-size: clamp(14px, 2.2vw, 22px); letter-spacing: 0.14em;
+        padding: 10px 34px; border: 3px solid #232a55;
+        background: #ffd23f; box-shadow: 6px 6px 0 #232a55;
+        transform: skewX(-8deg); animation: pulse 1.15s steps(2) infinite;
+      }
+      @keyframes pulse { 50% { background: #fff3d0; } }
+      .t-keys {
+        margin-top: 34px; color: #cfe8f0; font-size: 12px; letter-spacing: 0.12em;
+        text-align: center; line-height: 1.9; text-transform: uppercase;
+      }
+      .t-keys b { color: #ffd23f; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="hud"></div>
+    <div id="title">
+      <div class="t-logo">POCKET<br/>GO</div>
+      <div class="t-sub">a 2016 neighborhood stroll &mdash; catch them on the corner</div>
+      <div class="t-start">PRESS ENTER</div>
+      <div class="t-keys">
+        <b>WASD</b> walk &nbsp; <b>E</b> interact &nbsp; <b>SPACE</b> hold/release throw<br/>
+        <b>A D</b> curve &nbsp; <b>B</b> berry &nbsp; <b>ENTER</b> confirm
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

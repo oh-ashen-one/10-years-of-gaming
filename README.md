@@ -47,7 +47,7 @@ different movies.
 
 | Game | Slice | Status |
 |---|---|---|
-| 2016 Pokémon GO | walk → catch loop → gym | ⬜ |
+| 2016 Pokémon GO | walk → catch loop → gym | ✅ |
 | 2017 PUBG | drop → loot → shrink → chicken dinner | ⬜ |
 | 2018 Fortnite | dive → harvest → build → victory royale | ⬜ |
 | 2019 Minecraft | punch → craft → shelter → survive the night | ⬜ |

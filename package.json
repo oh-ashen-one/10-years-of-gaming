@@ -7,8 +7,9 @@
     "games/*"
   ],
   "scripts": {
-    "typecheck": "tsc --noEmit -p core/tsconfig.json && tsc --noEmit -p core/demo/tsconfig.json",
-    "build": "npm run typecheck && npm run demo:build",
+    "typecheck": "tsc --noEmit -p core/tsconfig.json && tsc --noEmit -p core/demo/tsconfig.json && tsc --noEmit -p games/2016-pokemon-go/tsconfig.json",
+    "build": "npm run typecheck && npm run demo:build && npm run build:game1",
+    "build:game1": "vite build games/2016-pokemon-go",
     "demo": "vite core/demo",
     "demo:build": "vite build core/demo",
     "shoot": "node tools/shoot.mjs"
