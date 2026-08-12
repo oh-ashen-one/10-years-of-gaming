@@ -321,7 +321,7 @@ const chaseTarget = { pos: new THREE.Vector3(), heading: 0, speed: 0, fovBias: 0
 const resultsTarget = { pos: new THREE.Vector3(), heading: 0, speed: 0 };
 
 const BUS_DIR = new THREE.Vector3(860, 0, 560).normalize();
-const busPos = new THREE.Vector3(-430, 120, -280);
+const busPos = new THREE.Vector3(-300, 115, -200); // near enough to read in the title orbit
 let lastMoveMag = 0;
 
 function updateCamera(dt: number, time: number): void {
@@ -422,9 +422,6 @@ const loop = new FrameLoop({
 
     /* ---- player rig ---- */
     const p = game.player;
-    playerRig.group.position.set(p.x, p.y, p.z);
-    playerRig.group.rotation.y = p.heading;
-    playerRig.group.visible = game.phase === "ground" || game.phase === "drop" || game.phase === "results";
     let pose: Pose = "idle";
     if (game.phase === "drop") pose = p.glider ? "glide" : "dive";
     else if (game.phase === "results" && game.won) pose = "dance";
@@ -432,6 +429,10 @@ const loop = new FrameLoop({
     else if (rmb) pose = "aim";
     else if (lastMoveMag > 0.05) pose = "run";
     playerRig.update(dt, time, 6, pose);
+    // place AFTER the pose update (poses write local y/rotation)
+    playerRig.group.position.set(p.x, p.y, p.z);
+    playerRig.group.rotation.y = p.heading;
+    playerRig.group.visible = game.phase === "ground" || game.phase === "drop" || game.phase === "results";
 
     /* ---- bots ---- */
     for (const b of game.bots) {
@@ -447,9 +448,10 @@ const loop = new FrameLoop({
         }
         continue;
       }
-      v.rig.group.position.set(b.x, game.groundAt(b.x, b.z), b.z);
       const poseB: Pose = b.state === "fight" ? "aim" : b.state === "stunned" ? "idle" : b.state === "loot" ? "idle" : "run";
       v.rig.update(dt, time + b.id * 1.7, 4, poseB);
+      // place AFTER the pose update (poses write local y)
+      v.rig.group.position.set(b.x, game.groundAt(b.x, b.z), b.z);
       v.rig.group.rotation.y =
         b.state === "fight"
           ? Math.atan2(p.x - b.x, p.z - b.z)
@@ -553,6 +555,7 @@ installHarness({
       hp: p.hp,
       alive: game.aliveCount(),
       kills: game.kills,
+      damage: game.damage,
       stage: game.stage,
       wall: game.wall,
       glider: p.glider,
@@ -566,6 +569,7 @@ installHarness({
   jump() { game.space(); },
   land(place: "tilted" | "farm" | "hill" = "tilted") { buildLobbyVisuals(); game.debugLand(place); },
   glideOver(place: "tilted" | "farm" | "hill", alt = 55) { buildLobbyVisuals(); audio.stopBus(); game.debugGlideOver(place, alt); },
+  gotoTree() { game.debugGotoTree(); },
   setCircle(stage: 1 | 2 | 3) { game.debugCircle(stage); },
   setAlive(n: number) { game.debugAlive(n); },
   buildDemo() { game.debugBuildDemo(); },

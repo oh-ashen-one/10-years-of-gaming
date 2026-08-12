@@ -828,9 +828,9 @@ export class Game {
     const gz = Math.round(b.z / CELL);
     if (!this.builds.has(this.pieceKey("ramp", gx, 0, gz, f))) {
       this.placePiece("ramp", gx, 0, gz, f, b.name);
-      // the bot climbs its ramp over the next second
-      b.x += Math.sin(f * Math.PI / 2) * 1.5;
-      b.z += Math.cos(f * Math.PI / 2) * 1.5;
+      // the bot scrambles to the ramp's high end (toward the threat)
+      b.x += Math.sin(f * Math.PI / 2) * 1.2;
+      b.z += Math.cos(f * Math.PI / 2) * 1.2;
     }
   }
 
@@ -886,16 +886,38 @@ export class Game {
     this.events.onLand?.();
   }
 
-  /** Mid-air over a place, glider open (shot 03). */
+  /** Mid-air over a place, glider open, facing its center (shot 03). */
   debugGlideOver(place: "tilted" | "farm" | "hill", alt = 55): void {
     if (this.phase === "title") this.start();
     const c = place === "tilted" ? TILTED : place === "farm" ? FARM : HILL;
     this.player.x = c.x;
-    this.player.z = c.z + 30;
+    this.player.z = c.z + 34;
     this.player.y = alt;
+    this.player.heading = Math.atan2(c.x - this.player.x, c.z - this.player.z);
     this.player.glider = true;
     this.phase = "drop";
     this.events.onGlider?.(true);
+  }
+
+  /** Put the player in front of the nearest living tree, facing it. */
+  debugGotoTree(): void {
+    const p = this.player;
+    let best: Harvestable | null = null;
+    let bd = Infinity;
+    for (const h of this.harvestables) {
+      if (!h.alive || h.kind !== "tree") continue;
+      const d = Math.hypot(h.x - p.x, h.z - p.z);
+      if (d < bd) {
+        bd = d;
+        best = h;
+      }
+    }
+    if (best) {
+      p.x = best.x - 2.4;
+      p.z = best.z;
+      p.y = heightAt(p.x, p.z);
+      p.heading = Math.atan2(best.x - p.x, best.z - p.z);
+    }
   }
 
   debugCircle(stage: 1 | 2 | 3): void {
@@ -953,7 +975,7 @@ export class Game {
     const p = this.player;
     b.x = p.x + Math.sin(p.heading) * 20;
     b.z = p.z + Math.cos(p.heading) * 20;
-    b.walled = false;
+    b.walled = true;   // pre-walled: the shot wants the RAMP, not a turtle
     b.ramped = false;
     b.fightT = 3.6; // trigger the ramp reflex immediately
     b.state = "fight";

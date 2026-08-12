@@ -31,28 +31,27 @@ export default [
     name: "04-harvest-whack",
     async run(page, game) {
       await game("land", "tilted");
-      await page.evaluate(() => window.__game.teleport(-135, -25)); // near trees by the tower
-      // find a tree: walk toward the nearest one west of town
-      await page.evaluate(() => window.__game.teleport(-134, -24));
-      await page.keyboard.down("KeyW");
-      await page.waitForTimeout(700);
-      await page.keyboard.up("KeyW");
-      // swing (LMB down) — catches mid-swing pose + chips
+      await game("gotoTree"); // teleports facing the nearest tree
+      await page.waitForTimeout(600); // camera settles behind
       await page.mouse.down();
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(320); // mid-swing, chips flying
       await page.mouse.up();
     },
   },
 
-  // 05 — build mode: ghost green, a ramp + wall going up
+  // 05 — build mode: ghost green, a ramp + wall going up on open grass
   {
     name: "05-build-ramp",
     async run(page, game) {
+      await page.evaluate(() => window.__game.teleport(60, -60)); // open field
+      await page.waitForTimeout(500);
       await game("giveMats", 120);
       await game("buildDemo"); // ramp + wall placed ahead
-      await page.waitForTimeout(300);
+      await page.keyboard.down("KeyS"); // step back so the ghost sits on clear grass
+      await page.waitForTimeout(450);
+      await page.keyboard.up("KeyS");
       await game("q"); // enter build mode, ghost = wall
-      await page.waitForTimeout(700);
+      await page.waitForTimeout(600);
     },
   },
 
