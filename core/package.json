@@ -1,0 +1,12 @@
+{
+  "name": "@tenyears/core",
+  "version": "0.1.0",
+  "description": "Shared studio core for the 10 Years of Gaming anthology: cel NPR, ink post, painted sky, chase camera, synth audio, HUD language, frame loop, harness.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "three": "^0.169.0"
+  }
+}
