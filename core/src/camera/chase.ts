@@ -27,6 +27,8 @@ export interface ChaseTarget {
   beauty?: boolean;
   /** extra FOV punch (boost, burst) */
   punch?: boolean;
+  /** additive FOV offset in degrees (aim zoom = negative) */
+  fovBias?: number;
 }
 
 export interface ChaseCameraOptions {
@@ -154,8 +156,8 @@ export class ChaseCamera {
       );
       this.look.lerp(_look, 1 - Math.exp(-dt * 7.5));
 
-      // FOV kick with speed + punch
-      const fovT = o.baseFov + t.speed * o.speedFov + (t.punch ? o.punchFov : 0);
+      // FOV kick with speed + punch + aim bias
+      const fovT = o.baseFov + t.speed * o.speedFov + (t.punch ? o.punchFov : 0) + (t.fovBias ?? 0);
       this.fov += (fovT - this.fov) * Math.min(1, dt * 3.5);
     }
 
