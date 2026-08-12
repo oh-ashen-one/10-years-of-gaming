@@ -30,11 +30,39 @@ Notes:
 
 ## Format
 
-Each year gets one game, rebuilt as a polished ~10-minute playable slice:
+Each year gets one game, rebuilt as a polished ~10-minute playable browser slice.
+Stack (locked): **Vite + strict TypeScript + Three.js, zero external assets** —
+every mesh, texture and sound generated in code. One shared studio core, eleven
+different movies.
 
-- `2016-pokemon-go/` … `2026-resident-evil-requiem/` — one folder per game
-- Each folder: playable build + short devlog notes
-- Engine: TBD per game (Unity/Godot/web — whatever fits the original's feel)
+- **`MASTER.md` — the production bible.** Craft standard (the Dusk bar),
+  shared-core spec, per-game chapters (beat sheets, controls, art locks, shot
+  lists, scope guards), engineering rules, and the ready-to-use `/goal` prompt.
+- `core/` — `@tenyears/core`, the shared studio package (cel NPR, ink post,
+  painted sky, chase camera, synth audio, HUD language, film-test harness)
+- `games/2016-pokemon-go/` … `games/2026-re-requiem/` — one Vite app per game,
+  own port (5301–5311), own `shots/` film test
+
+### Build status
+
+| Game | Slice | Status |
+|---|---|---|
+| 2016 Pokémon GO | walk → catch loop → gym | ⬜ |
+| 2017 PUBG | drop → loot → shrink → chicken dinner | ⬜ |
+| 2018 Fortnite | dive → harvest → build → victory royale | ⬜ |
+| 2019 Minecraft | punch → craft → shelter → survive the night | ⬜ |
+| 2020 Among Us | tasks → body → meeting → eject | ⬜ |
+| 2021 Genshin Impact | meadow combat → glide → world boss | ⬜ |
+| 2022 Elden Ring | soldiers → fog gate → Bridge Warden | ⬜ |
+| 2023 Baldur's Gate 3 | dialogue rolls → turn-based tollhouse fight | ⬜ |
+| 2024 Black Myth: Wukong | staff combos → perfect dodge → Tiger Abbot | ⬜ |
+| 2025 Clair Obscur | dodge/parry turn-based → Marionette boss | ⬜ |
+| 2026 RE Requiem | flashlight ward → puzzle → pursuer chase | ⬜ |
+
+### Building a game
+
+Feed the `/goal` prompt from `MASTER.md` §7, filling `{{N}}`, `{{YEAR}}`,
+`{{TITLE}}`, `{{SLUG}}`, `{{NN}}` from the fill table — one game per run.
 
 ## Sources
 
