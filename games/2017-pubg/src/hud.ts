@@ -185,7 +185,7 @@ export class HUD {
 
   update(game: Game, bigMap: boolean, camYaw: number): void {
     const p = game.player;
-    this.aliveEl.innerHTML = `ALIVE <b>${game.aliveCount()}</b>`;
+    this.aliveEl.innerHTML = `ALIVE <b>${game.bots.length ? game.aliveCount() : 16}</b>`;
 
     // zone line
     if (game.phase === "ground") {
@@ -247,7 +247,7 @@ export class HUD {
       const major = d % 45 < 5 || d % 45 > 40;
       c.fillStyle = major ? ORANGE : "rgba(240,236,224,0.5)";
       c.fillRect(x - 1, h - (major ? 22 : 14), 2, major ? 22 : 14);
-      if (d % 90 < 5 || d % 90 > 85) {
+      if (d % 90 === 0) {
         const label = ["N", "E", "S", "W"][Math.round(d / 90) % 4];
         c.fillStyle = "#ffe9c0";
         c.fillText(label, x, 20);

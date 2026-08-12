@@ -371,21 +371,18 @@ const _e = new THREE.Euler();
 const _q = new THREE.Quaternion();
 
 function updateAim(): void {
+  // hitscan truth: from the player's chest, along the camera's yaw +
+  // arrow-nudge — near-level so the crosshair honestly maps to the shot
   chase.camera.getWorldDirection(_dir);
-  // apply arrow-key nudge in camera space
-  _e.set(nudge.y, nudge.x, 0, "YXZ");
-  _q.setFromEuler(_e);
-  // rotate dir around camera-local axes: build in camera space
-  const camQ = chase.camera.quaternion;
-  const local = new THREE.Vector3(nudge.x, nudge.y, 1).normalize(); // slight yaw/pitch offsets
-  _dir.copy(local.applyQuaternion(camQ)).normalize();
-  const cp = chase.camera.position;
-  game.aim.ox = cp.x;
-  game.aim.oy = cp.y;
-  game.aim.oz = cp.z;
-  game.aim.dx = _dir.x;
-  game.aim.dy = _dir.y;
-  game.aim.dz = _dir.z;
+  const yaw = Math.atan2(_dir.x, _dir.z) - nudge.x;
+  const pitch = nudge.y - 0.02;
+  const p = game.player;
+  game.aim.ox = p.x;
+  game.aim.oy = p.y + 1.35;
+  game.aim.oz = p.z;
+  game.aim.dx = Math.sin(yaw) * Math.cos(pitch);
+  game.aim.dy = Math.sin(pitch);
+  game.aim.dz = Math.cos(yaw) * Math.cos(pitch);
 }
 
 /* -------------------------------------------------------------- frame loop -- */

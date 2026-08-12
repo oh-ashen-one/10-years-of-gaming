@@ -155,8 +155,8 @@ const WHEAT_COUNT = 2400;
 
 function buildWheat(parent: THREE.Group): void {
   // crossed-quad blades, two tones, static — a golden sea you can hide in
-  const blade = new THREE.PlaneGeometry(0.9, 1.4);
-  blade.translate(0, 0.7, 0);
+  const blade = new THREE.PlaneGeometry(0.5, 0.85);
+  blade.translate(0, 0.42, 0);
   const mat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
   const mesh = new THREE.InstancedMesh(blade, mat, WHEAT_COUNT * 2);
   const cA = col(PAL.extra.wheat);

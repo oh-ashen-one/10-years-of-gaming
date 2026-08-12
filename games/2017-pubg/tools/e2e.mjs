@@ -45,21 +45,22 @@ await page.keyboard.down("KeyW");
 await page.waitForTimeout(1500);
 await page.keyboard.up("KeyW");
 
-// a real gunfight: pull a bot into the open, fire the rifle with Space
-await page.evaluate(() => {
-  window.__game.giveWeapon("rifle");
-  window.__game.pullBot(14);
-});
-await page.waitForTimeout(300);
+// a real gunfight: pull a bot into the crosshair and fire the rifle.
+// the bot strafes, so we re-pull it into the open between bursts — the
+// shots themselves resolve through the real hitscan path.
+await page.evaluate(() => window.__game.giveWeapon("rifle"));
 const before = await dbg();
-await page.keyboard.down("Space");
-await page.waitForTimeout(2500);
-await page.keyboard.up("Space");
-const after = await dbg();
-console.log("combat: damage check — kills before/after:", before.kills, after.kills);
-if (after.kills <= before.kills && after.hp === 100) {
-  errors.push("gunfight had no effect (no kill, no damage taken)");
+for (let i = 0; i < 10; i++) {
+  await page.evaluate(() => window.__game.pullBot(10));
+  await page.keyboard.down("Space");
+  await page.waitForTimeout(450);
+  await page.keyboard.up("Space");
+  const d = await dbg();
+  if (d.kills > before.kills) break;
 }
+const after = await dbg();
+console.log("combat: kills before/after:", before.kills, after.kills, "hp:", after.hp);
+if (after.kills <= before.kills) errors.push("hitscan never landed a kill");
 
 // buggy: enter, drive, exit
 await page.evaluate(() => window.__game.buggy());

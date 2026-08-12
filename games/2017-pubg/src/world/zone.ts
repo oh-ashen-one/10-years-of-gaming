@@ -64,7 +64,7 @@ export class ZoneFX {
   }
 
   update(wall: { cx: number; cz: number; r: number }, target: { cx: number; cz: number; r: number }, stage: number): void {
-    const H = 220;
+    const H = 70;
     this.wall.visible = stage > 0;
     this.wall.position.set(wall.cx, H / 2 - 10, wall.cz);
     this.wall.scale.set(wall.r, H, wall.r);
