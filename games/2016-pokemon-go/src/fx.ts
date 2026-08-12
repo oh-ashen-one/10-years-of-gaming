@@ -70,7 +70,7 @@ export class StarBurst {
   private e = new THREE.Euler();
 
   constructor(parent: THREE.Group, colorA = PAL.extra.gold, colorB = 0xffffff) {
-    const geo = new THREE.PlaneGeometry(0.22, 0.22);
+    const geo = new THREE.PlaneGeometry(0.42, 0.42);
     const mat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true });
     this.mesh = new THREE.InstancedMesh(geo, mat, BURST_COUNT);
     this.mesh.frustumCulled = false;
@@ -92,7 +92,17 @@ export class StarBurst {
   }
 
   get active(): boolean {
-    return this.t < 1.1;
+    return this.t < 1.4;
+  }
+
+  /** debug/verification: current burst age (Infinity when idle) */
+  get age(): number {
+    return this.t;
+  }
+
+  /** debug: where the burst is centered and whether it renders */
+  debugState(): { center: number[]; visible: boolean } {
+    return { center: this.center.toArray(), visible: this.mesh.visible };
   }
 
   update(dt: number, time: number): void {
@@ -105,9 +115,9 @@ export class StarBurst {
     const v = new THREE.Vector3();
     const s = new THREE.Vector3();
     for (let i = 0; i < BURST_COUNT; i++) {
-      v.copy(this.dirs[i]).multiplyScalar(k * 7).add(this.center);
-      v.y -= k * k * 4; // gravity pulls the stars down
-      const sc = Math.max(0.01, 1 - k * 0.9);
+      v.copy(this.dirs[i]).multiplyScalar(k * 11).add(this.center);
+      v.y -= k * k * 3.2; // gravity pulls the stars down
+      const sc = Math.max(0.01, 1 - k * 0.55);
       s.setScalar(sc);
       this.e.set(time * 6 + i, i * 1.7, time * 4 + i);
       this.q.setFromEuler(this.e);

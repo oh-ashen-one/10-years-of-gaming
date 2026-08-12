@@ -177,6 +177,11 @@ export class Game {
     const enc = this.nearestEncounter();
     if (!enc) return;
     this.encounters = this.encounters.filter((e) => e !== enc);
+    // the pad sits at a fixed duel distance so throw tuning is consistent
+    const p = this.player;
+    const d = Math.hypot(enc.x - p.x, enc.z - p.z) || 1;
+    enc.x = p.x + ((enc.x - p.x) / d) * PAD_DIST;
+    enc.z = p.z + ((enc.z - p.z) / d) * PAD_DIST;
     this.catch = {
       enc, sub: "aim",
       ringT: 1, ringDir: -1,
@@ -581,11 +586,14 @@ export class Game {
     this.player.heading = Math.atan2(t.x - this.player.x, t.z - this.player.z);
   }
 
-  /** Force a specific species to pop right in front of the player. */
+  /** Force a specific species to pop in view of the player (shoot tool). */
   forceEncounter(id: SpeciesId): Encounter {
     const p = this.player;
-    const x = p.x + Math.sin(p.heading) * 5;
-    const z = p.z + Math.cos(p.heading) * 5;
+    const fx = Math.sin(p.heading);
+    const fz = Math.cos(p.heading);
+    // ahead and off to the side — never hidden behind the player's back
+    const x = p.x + fx * 2.6 - fz * 1.5;
+    const z = p.z + fz * 2.6 + fx * 1.5;
     const enc = this.spawn(id, x, z);
     enc.state = "out";
     enc.t = 0;

@@ -42,7 +42,7 @@ function makeGround(): THREE.Mesh {
       uGrassA: { value: col(PAL.terrain.lit).clone() },
       uGrassB: { value: col(PAL.terrain.litHot).clone() },
       uLawn: { value: col(0x58b06a).clone() },
-      uStreet: { value: col(PAL.terrain.mid).clone() },
+      uStreet: { value: col(0xcfc8e4).clone() },
       uSidewalk: { value: col(PAL.extra.sidewalk).clone() },
       uPlazaA: { value: col(PAL.extra.plazaA).clone() },
       uPlazaB: { value: col(PAL.extra.plazaB).clone() },
@@ -77,11 +77,13 @@ function makeGround(): THREE.Mesh {
           float n = g_fbm(vW.xz * 0.08, 2);
           c = uLawn * (0.9 + 0.2 * step(0.5, n));
         } else if (bid < 1.5) {                           // street
+          // pale asphalt + cream center dashes (the map-read contrast)
           c = uStreet;
-          // center dashes, inked
-          float dash = step(abs(fract(vW.x * 0.125) - 0.5), 0.06)
-                     + step(abs(fract(vW.z * 0.125) - 0.5), 0.06);
-          c = mix(c, uInkLine, clamp(dash, 0.0, 1.0) * 0.35);
+          vec2 dl = abs(fract(vW.xz / 80.0 + 0.5) - 0.5) * 80.0;
+          float alongX = step(fract(vW.x * 0.125), 0.55) * step(0.3, fract(vW.x * 0.125));
+          float alongZ = step(fract(vW.z * 0.125), 0.55) * step(0.3, fract(vW.z * 0.125));
+          float dash = max(step(dl.y, 0.7) * alongX, step(dl.x, 0.7) * alongZ);
+          c = mix(c, uSidewalk, dash * 0.85);
         } else if (bid < 2.5) {                           // sidewalk: grid ink
           c = uSidewalk;
           vec2 g2 = abs(fract(vW.xz * 0.25) - 0.5);
@@ -236,10 +238,11 @@ function makeLamp(): THREE.Group {
 }
 
 function buildLamps(parent: THREE.Group): void {
+  // offset off both axes so no lamp ever sits on a catch-scene sightline
   for (const s of [-80, 0, 80]) {
     for (const t of [-80, 0, 80]) {
       const lamp = makeLamp();
-      lamp.position.set(s + 7, 0, t + 7);
+      lamp.position.set(s + 6.5, 0, t - 6.5);
       parent.add(lamp);
     }
   }
@@ -356,6 +359,10 @@ function buildLeaves(parent: THREE.Group): { update(dt: number, center: THREE.Ve
         if (x - center.x < -LEAF_BOX / 2) x += LEAF_BOX;
         if (z - center.z > LEAF_BOX / 2) z -= LEAF_BOX;
         if (z - center.z < -LEAF_BOX / 2) z += LEAF_BOX;
+        // never let a leaf hug the lens — a near leaf reads as a giant slab
+        const cdx = x - center.x;
+        const cdz = z - center.z;
+        if (cdx * cdx + cdz * cdz < 20) x += Math.sign(cdx || 1) * 14;
         if (y < 0.2) y = 6;
         pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z;
         e.set(time * 2 + ph[i], ph[i] + time * 1.3, time * 1.1 + ph[i]);

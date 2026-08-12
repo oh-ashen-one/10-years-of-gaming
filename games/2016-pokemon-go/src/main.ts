@@ -126,6 +126,11 @@ game.events = {
     if (v?.ring) world.remove(v.ring);
     catchCritter = v?.critter ?? null;
     encVisuals.delete(enc.id);
+    // the critter steps onto the pad (game snapped it to duel distance)
+    if (catchCritter) {
+      catchCritter.group.position.set(enc.x, 0, enc.z);
+      catchCritter.group.scale.multiplyScalar(1.3); // pad presence
+    }
     catchFX.begin(enc.x, enc.z);
     // the player squares up to the pad
     game.player.heading = Math.atan2(enc.x - game.player.x, enc.z - game.player.z);
@@ -154,7 +159,8 @@ game.events = {
   },
   onGotcha(id) {
     if (catchCritter) {
-      burst.fire(catchCritter.group.position.clone().add(new THREE.Vector3(0, 1, 0)));
+      // fire from the pad — the certain world position of the moment
+      burst.fire(catchFX.group.position.clone().setY(1.4));
       catchCritter.group.visible = false;
     }
     audio.gotcha();
@@ -310,8 +316,8 @@ function updateCamera(dt: number, time: number): void {
     const fx = enc.x - p.x;
     const fz = enc.z - p.z;
     const d = Math.hypot(fx, fz) || 1;
-    // over the player's shoulder, framing the pad
-    _want.set(p.x - (fx / d) * 3.4 - (fz / d) * 1.1, 2.4, p.z - (fz / d) * 3.4 + (fx / d) * 1.1);
+    // over the player's shoulder, swung wide so the pad stays clear
+    _want.set(p.x - (fx / d) * 3.8 + (fz / d) * 2.6, 2.6, p.z - (fz / d) * 3.8 - (fx / d) * 2.6);
     _look.set(enc.x, 0.9, enc.z);
     camPos.lerp(_want, 1 - Math.exp(-dt * 4));
     camLook.lerp(_look, 1 - Math.exp(-dt * 6));
@@ -468,6 +474,9 @@ installHarness({
       catches: game.catches,
       steps: game.steps,
       pixelScale: loop.pixelScale,
+      burstAge: burst.age,
+      burstState: burst.debugState(),
+      critter: catchCritter ? catchCritter.group.position.toArray() : null,
     };
   },
   /* scenario hooks for the shot list */
@@ -479,6 +488,13 @@ installHarness({
   },
   enterCatch() { game.debugEnterCatch(); },
   catchBurst() { game.debugCatchBurst(); },
+  /** FX sanity hook: fire the star burst right in front of the player */
+  burstTest() {
+    burst.fire(new THREE.Vector3(game.player.x, 1.2, game.player.z));
+  },
+  burstAt(x: number, y: number, z: number) {
+    burst.fire(new THREE.Vector3(x, y, z));
+  },
   startGym() {
     if (!game.buddy) game.debugFinishBuddy();
     game.startGym();
@@ -488,6 +504,9 @@ installHarness({
       game.gym.bossHP = boss;
       game.gym.buddyHP = buddy;
     }
+  },
+  gymWarn() {
+    return game.gym?.warnLane !== null;
   },
 });
 

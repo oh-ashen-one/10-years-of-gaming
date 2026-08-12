@@ -38,7 +38,7 @@ export default [
     async run(page, game) {
       await game("catchBurst");
       await page.waitForFunction(() => window.__game.phase === "catch", { timeout: 5000 }).catch(() => {});
-      await page.waitForTimeout(950); // third wobble → burst just started
+      await page.waitForTimeout(380); // third wobble → stars mid-flight
     },
   },
 

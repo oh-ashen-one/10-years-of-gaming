@@ -268,10 +268,6 @@ export class HUD {
         color: css(PAL.extra.gymPurple), hotColor: C.hot, hot: g.warnLane !== null,
         trackColor: "rgba(255,255,255,0.10)",
       });
-      bctx.fillStyle = C.paper;
-      bctx.font = "italic 900 18px 'Segoe UI', Arial";
-      bctx.textAlign = "center";
-      bctx.fillText("GYMHORN", this.bossBarCv.width / 2, this.bossBarCv.height - 6);
       const uctx = this.buddyBarCv.getContext("2d")!;
       uctx.clearRect(0, 0, this.buddyBarCv.width, this.buddyBarCv.height);
       drawCells(uctx, {
