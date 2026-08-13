@@ -50,7 +50,7 @@ different movies.
 | 2016 Pokémon GO | walk → catch loop → gym | ✅ |
 | 2017 PUBG | drop → loot → shrink → chicken dinner | ✅ |
 | 2018 Fortnite | dive → harvest → build → victory royale | ✅ |
-| 2019 Minecraft | punch → craft → shelter → survive the night | ⬜ |
+| 2019 Minecraft | punch → craft → shelter → survive the night | ✅ |
 | 2020 Among Us | tasks → body → meeting → eject | ⬜ |
 | 2021 Genshin Impact | meadow combat → glide → world boss | ⬜ |
 | 2022 Elden Ring | soldiers → fog gate → Bridge Warden | ⬜ |
