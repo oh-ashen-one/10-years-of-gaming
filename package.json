@@ -7,8 +7,8 @@
     "games/*"
   ],
   "scripts": {
-    "typecheck": "tsc --noEmit -p core/tsconfig.json && tsc --noEmit -p core/demo/tsconfig.json && tsc --noEmit -p games/2016-pokemon-go/tsconfig.json && tsc --noEmit -p games/2017-pubg/tsconfig.json && tsc --noEmit -p games/2018-fortnite/tsconfig.json && tsc --noEmit -p games/2019-minecraft/tsconfig.json && tsc --noEmit -p games/2020-among-us/tsconfig.json && tsc --noEmit -p games/2021-genshin/tsconfig.json && tsc --noEmit -p games/2022-elden-ring/tsconfig.json",
-    "build": "npm run typecheck && npm run demo:build && npm run build:game1 && npm run build:game2 && npm run build:game3 && npm run build:game4 && npm run build:game5 && npm run build:game6 && npm run build:game7",
+    "typecheck": "tsc --noEmit -p core/tsconfig.json && tsc --noEmit -p core/demo/tsconfig.json && tsc --noEmit -p games/2016-pokemon-go/tsconfig.json && tsc --noEmit -p games/2017-pubg/tsconfig.json && tsc --noEmit -p games/2018-fortnite/tsconfig.json && tsc --noEmit -p games/2019-minecraft/tsconfig.json && tsc --noEmit -p games/2020-among-us/tsconfig.json && tsc --noEmit -p games/2021-genshin/tsconfig.json && tsc --noEmit -p games/2022-elden-ring/tsconfig.json && tsc --noEmit -p games/2023-baldurs-gate/tsconfig.json",
+    "build": "npm run typecheck && npm run demo:build && npm run build:game1 && npm run build:game2 && npm run build:game3 && npm run build:game4 && npm run build:game5 && npm run build:game6 && npm run build:game7 && npm run build:game8",
     "build:game1": "vite build games/2016-pokemon-go",
     "build:game2": "vite build games/2017-pubg",
     "build:game3": "vite build games/2018-fortnite",
@@ -16,6 +16,7 @@
     "build:game5": "vite build games/2020-among-us",
     "build:game6": "vite build games/2021-genshin",
     "build:game7": "vite build games/2022-elden-ring",
+    "build:game8": "vite build games/2023-baldurs-gate",
     "demo": "vite core/demo",
     "demo:build": "vite build core/demo",
     "shoot": "node tools/shoot.mjs"

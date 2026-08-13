@@ -1,0 +1,15 @@
+{
+  "name": "game-2023-baldurs-gate",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "shoot": "node ../../tools/shoot.mjs --port 5308 --out shots --manifest shots.manifest.mjs"
+  },
+  "dependencies": {
+    "@tenyears/core": "*",
+    "three": "^0.169.0"
+  }
+}

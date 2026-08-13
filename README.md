@@ -54,7 +54,7 @@ different movies.
 | 2020 Among Us | tasks → body → meeting → eject | ✅ |
 | 2021 Genshin Impact | meadow combat → glide → world boss | ✅ |
 | 2022 Elden Ring | soldiers → fog gate → Bridge Warden | ✅ |
-| 2023 Baldur's Gate 3 | dialogue rolls → turn-based tollhouse fight | ⬜ |
+| 2023 Baldur's Gate 3 | dialogue rolls → turn-based tollhouse fight | ✅ |
 | 2024 Black Myth: Wukong | staff combos → perfect dodge → Tiger Abbot | ⬜ |
 | 2025 Clair Obscur | dodge/parry turn-based → Marionette boss | ⬜ |
 | 2026 RE Requiem | flashlight ward → puzzle → pursuer chase | ⬜ |
