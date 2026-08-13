@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SUSPECTED — a 2020 ship-mystery</title>
+    <style>
+      :root { color-scheme: dark; }
+      html, body {
+        margin: 0; padding: 0; width: 100%; height: 100%;
+        overflow: hidden; background: #0a0c18;
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        user-select: none; -webkit-user-select: none;
+      }
+      #app { position: fixed; inset: 0; }
+      #app canvas { display: block; }
+      #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+      #fog { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+      #title {
+        position: fixed; inset: 0; z-index: 30; display: flex;
+        flex-direction: column; align-items: center; justify-content: center;
+        background: transparent; pointer-events: auto; cursor: pointer;
+      }
+      #title.hidden { display: none; }
+      .t-logo {
+        font-size: min(12vw, 120px); font-weight: 900; font-style: italic;
+        letter-spacing: 0.02em; line-height: 0.9; text-align: center;
+        color: #f0f4ff;
+        text-shadow:
+          0.045em 0.045em 0 #e03a4a,
+          0.09em 0.09em 0 #141a30;
+        transform: skewX(-6deg);
+      }
+      .t-sub {
+        margin-top: 16px; color: #7fd8e8; font-weight: 700;
+        letter-spacing: 0.5em; text-indent: 0.5em; font-size: clamp(10px, 1.6vw, 15px);
+        text-transform: uppercase;
+      }
+      .t-start {
+        margin-top: 44px; color: #141a30; font-weight: 900; font-style: italic;
+        font-size: clamp(14px, 2.2vw, 22px); letter-spacing: 0.14em;
+        padding: 10px 34px; border: 3px solid #141a30;
+        background: #e03a4a; box-shadow: 6px 6px 0 #141a30;
+        transform: skewX(-8deg); animation: pulse 1.15s steps(2) infinite;
+      }
+      @keyframes pulse { 50% { background: #f0f4ff; } }
+      .t-keys {
+        margin-top: 32px; color: #9aa8c8; font-size: 12px; letter-spacing: 0.12em;
+        text-align: center; line-height: 1.9; text-transform: uppercase;
+      }
+      .t-keys b { color: #e03a4a; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <canvas id="fog"></canvas>
+    <div id="hud"></div>
+    <div id="title">
+      <div class="t-logo">SUSPECTED</div>
+      <div class="t-sub">one of us is not one of us &middot; 2020</div>
+      <div class="t-start">PRESS ENTER</div>
+      <div class="t-keys">
+        <b>WASD</b> move &nbsp; <b>E</b> use / task &nbsp; <b>R</b> report body &nbsp; <b>F</b> emergency button<br/>
+        minigames: <b>ARROWS + SPACE</b> &nbsp; meetings: <b>ARROWS + SPACE</b> vote
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
