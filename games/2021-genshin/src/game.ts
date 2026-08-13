@@ -666,6 +666,35 @@ export class Game {
     p.vy = 0;
   }
 
+  /** pull the nearest living mob into melee range ahead (e2e) */
+  debugPullMob(): void {
+    const p = this.player;
+    let best: Mob | null = null;
+    let bd = Infinity;
+    for (const m of this.mobs) {
+      if (m.dead) continue;
+      const d = Math.hypot(m.x - p.x, m.z - p.z);
+      if (d < bd) {
+        bd = d;
+        best = m;
+      }
+    }
+    if (best) {
+      best.x = p.x + Math.sin(p.heading) * 1.8;
+      best.z = p.z + Math.cos(p.heading) * 1.8;
+    }
+  }
+
+  /** stand right in front of the boss (e2e) */
+  debugToBoss(): void {
+    const p = this.player;
+    const b = this.boss;
+    p.x = b.x - Math.sin(b.heading) * 3;
+    p.z = b.z - Math.cos(b.heading) * 3;
+    p.y = heightAt(p.x, p.z);
+    p.heading = Math.atan2(b.x - p.x, b.z - p.z);
+  }
+
   setEnergy(n: number): void {
     this.player.energy = n;
   }
@@ -693,6 +722,9 @@ export class Game {
     if (b.state === "dormant") {
       this.setPhase("boss");
     }
+    // center stage, facing the player — the shot reads the tell
+    b.x = ARENA.x;
+    b.z = ARENA.z - 6;
     b.state = s === "spin" ? "spin" : s === "core" ? "core" : "volley";
     b.stateT = s === "volley" ? 0.1 : 0;
     b.volleyLeft = 6;

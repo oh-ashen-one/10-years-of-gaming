@@ -97,7 +97,7 @@ const sky = buildSky(scene, {
     } else if (Math.abs(x - CLIFF.x) < CLIFF.w / 2 + 3 && z > CLIFF.z - 6 && z < CLIFF.z + 28) {
       c = cStone;
     } else {
-      c = tmp.copy(cA).lerp(cB, fbm(x * 0.03, z * 0.03, 2) > 0.55 ? 0.5 : 0.05).clone();
+      c = tmp.copy(cA).lerp(cB, fbm(x * 0.03, z * 0.03, 2) > 0.4 ? 0.75 : 0.25).clone();
     }
     colors[i * 3] = c.r;
     colors[i * 3 + 1] = c.g;
@@ -404,9 +404,6 @@ const loop = new FrameLoop({
 
     /* ---- hero ---- */
     const p = game.player;
-    hero.group.position.set(p.x, p.y, p.z);
-    hero.group.rotation.y = p.heading;
-    hero.group.visible = game.phase !== "title";
     let pose: HeroPose = "idle";
     if (burstPoseT > 0) pose = "burst";
     else if (skillPoseT > 0) pose = "skill";
@@ -417,6 +414,10 @@ const loop = new FrameLoop({
     else if (Math.hypot(moveVector().x, moveVector().z) > 0.05) pose = "run";
     hero.update(dt, time, 6, pose);
     hero.setStanceColors(p.stance);
+    // place AFTER the pose update (poses write local y/rotation)
+    hero.group.position.set(p.x, p.y, p.z);
+    hero.group.rotation.y = p.heading;
+    hero.group.visible = game.phase !== "title";
     burstPoseT = Math.max(0, burstPoseT - rawDt);
     skillPoseT = Math.max(0, skillPoseT - rawDt);
     slashPoseT = Math.max(0, slashPoseT - rawDt);
@@ -449,10 +450,11 @@ const loop = new FrameLoop({
 
     /* ---- the warden ---- */
     const b = game.boss;
-    warden.group.position.set(b.x, heightAt(b.x, b.z), b.z);
     warden.group.userData.heading = b.heading;
-    if (b.state !== "spin") warden.group.rotation.y = b.heading;
     warden.update(dt, time, b.state, b.stateT);
+    // place AFTER the update (its sway writes local y)
+    warden.group.position.set(b.x, heightAt(b.x, b.z), b.z);
+    if (b.state !== "spin") warden.group.rotation.y = b.heading;
     // missiles
     for (const m of b.missiles) {
       let mesh = missileMeshes.get(m);
@@ -519,6 +521,8 @@ installHarness({
     };
   },
   teleport(x: number, z: number) { game.teleport(x, z); },
+  pullMob() { game.debugPullMob(); },
+  toBoss() { game.debugToBoss(); },
   toCamp() { game.teleport(CAMP.x + 10, CAMP.z + 10); },
   toCliff() { game.teleport(CLIFF.x, CLIFF.z - 10); },
   toArena() { game.teleport(ARENA.x, ARENA.z + ARENA.r - 4); },

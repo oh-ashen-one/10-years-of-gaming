@@ -91,6 +91,8 @@ export class HUD {
         background: rgba(28,36,80,0.85);
         text-shadow: 3px 3px 0 ${C.ink};
       }
+      #hud-results { position: absolute; inset: 0; display: none; align-items: center;
+        justify-content: center; background: rgba(17,22,64,0.5); }
       #hud-results .sub { color: ${C.accent}; letter-spacing: 0.4em; font-size: 12px; margin-bottom: 16px; }
       #hud-results .res-stats { font-size: 18px; line-height: 2.0; color: ${C.paper}; text-align: center; }
       #hud-results .res-stats b { color: ${GALE}; }

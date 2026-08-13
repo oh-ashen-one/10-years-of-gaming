@@ -30,37 +30,32 @@ await page.keyboard.down("KeyW");
 await page.waitForTimeout(1200);
 await page.keyboard.up("KeyW");
 
-// camp fight: real combos until a mob dies
+// camp fight: pull a mob into reach, then real combos until it dies
 await page.evaluate(() => window.__game.toCamp());
 await page.waitForTimeout(400);
 let killed = false;
 for (let i = 0; i < 30; i++) {
-  // face the nearest mob and swing
-  await page.evaluate(() => {
-    const g = window.__game;
-    const d = g.debug();
-    // walk toward camp center while swinging
-    void d;
-  });
-  await page.keyboard.down("KeyW");
+  await page.evaluate(() => window.__game.pullMob());
   await page.mouse.down();
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(500);
   await page.mouse.up();
-  await page.keyboard.up("KeyW");
   const d = await dbg();
   if (d.mobsAlive < 4) { killed = true; break; }
 }
 console.log("camp kill:", killed);
 if (!killed) errors.push("no mosslunk died to real combos");
 
-// swirl: flame stance tag, then wind skill — biggest swirl must register
+// swirl: flame tag, then wind skill — biggest swirl must register
+await page.evaluate(() => window.__game.pullMob());
 await page.evaluate(() => window.__game.stance(2));
 await page.mouse.down(); await page.waitForTimeout(500); await page.mouse.up();
 await page.evaluate(() => window.__game.stance(1));
+await page.evaluate(() => window.__game.pullMob());
 await page.evaluate(() => window.__game.skill());
 await page.waitForTimeout(600);
 const swirl = (await dbg()).biggestSwirl;
 console.log("biggest swirl:", swirl);
+if (swirl <= 0) errors.push("swirl never triggered");
 
 // burst with full energy
 await page.evaluate(() => window.__game.setEnergy(100));
@@ -81,17 +76,18 @@ let bossAwake = (await dbg()).boss.state;
 console.log("boss state after entering arena:", bossAwake);
 if (bossAwake === "dormant") errors.push("boss never woke");
 
-// fight: spam combos + burst whenever charged; harness trims HP for time
+// fight: stand on the boss, combos + bursts; re-expose the core for time
 await page.evaluate(() => window.__game.bossState("core"));
 for (let i = 0; i < 40; i++) {
+  await page.evaluate(() => window.__game.toBoss());
   await page.mouse.down();
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(350);
   await page.mouse.up();
   await page.evaluate(() => window.__game.setEnergy(100));
   await page.keyboard.press("KeyQ");
   const d = await dbg();
   if (d.boss.hp <= 0) break;
-  if (i % 6 === 5) await page.evaluate(() => window.__game.bossState("core"));
+  if (i % 4 === 3) await page.evaluate(() => window.__game.bossState("core"));
 }
 let d = await dbg();
 console.log("boss hp:", d.boss.hp);

@@ -9,11 +9,11 @@ import { celEnv, col, hash1 } from "@tenyears/core";
 import { PAL } from "./palette";
 import { heightAt, WORLD, CAMP, CLIFF, ARENA } from "./meadow";
 
-const BLADES = 9000;
+const BLADES = 16000;
 
 export function buildGrass(world: THREE.Group): void {
-  const geo = new THREE.PlaneGeometry(0.7, 1.5, 1, 2);
-  geo.translate(0, 0.75, 0);
+  const geo = new THREE.PlaneGeometry(0.34, 0.95, 1, 2);
+  geo.translate(0, 0.47, 0);
 
   const mat = new THREE.ShaderMaterial({
     side: THREE.DoubleSide,
@@ -36,7 +36,7 @@ export function buildGrass(world: THREE.Group): void {
         wp.x += bend;
         wp.z += bend * 0.4;
         vBand = wave * 0.5 + 0.5;
-        vShade = position.y / 1.5;
+        vShade = position.y / 0.95;
         gl_Position = projectionMatrix * viewMatrix * modelMatrix * wp;
       }
     `,
@@ -47,7 +47,7 @@ export function buildGrass(world: THREE.Group): void {
       uniform vec3 uB;
       uniform vec3 uC;
       void main() {
-        // two-tone wave bands, darker roots
+        // two-tone wave bands, darker roots — luminous, never murky
         vec3 c = mix(uA, uB, step(0.5, vBand));
         c = mix(uC, c, 0.35 + vShade * 0.65);
         gl_FragColor = vec4(c, 1.0);
