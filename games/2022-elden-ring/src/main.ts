@@ -417,11 +417,22 @@ const loop = new FrameLoop({
         warden.group.position.set(e.x, heightAt(e.x, e.z), e.z);
         warden.group.rotation.y = Math.atan2(p.x - e.x, p.z - e.z);
         warden.group.visible = e.state !== "dead" && game.fogGatePassed;
-        // hammer telegraph ring
+        // hammer telegraph ring + the descending gold hammer ON the mark
         if (hammerMark) {
           const marking = e.state === "windup" && e.attackKind === "hammer";
           (hammerMark.material as THREE.MeshBasicMaterial).opacity = marking ? 0.55 + Math.sin(time * 14) * 0.25 : 0;
-          if (marking) hammerMark.position.set(e.hammerX, heightAt(e.hammerX, e.hammerZ) + 0.08, e.hammerZ);
+          if (marking) {
+            hammerMark.position.set(e.hammerX, heightAt(e.hammerX, e.hammerZ) + 0.08, e.hammerZ);
+            // the hammer itself descends onto the mark (warden-relative)
+            warden.hammer.visible = true;
+            warden.hammer.position.set(
+              e.hammerX - e.x,
+              9 - e.stateT * 10,
+              e.hammerZ - e.z,
+            );
+          } else if (e.attackKind !== "hammer") {
+            warden.hammer.visible = false;
+          }
         }
       }
     }
@@ -505,13 +516,14 @@ installHarness({
       flasks: p.flasks,
       shards: p.shards,
       deaths: game.deaths,
-      boss: { hp: game.boss.hp, state: game.boss.state, phase: game.bossPhase },
+      boss: { hp: game.boss.hp, state: game.boss.state, phase: game.bossPhase, x: game.boss.x, z: game.boss.z },
       soldiersAlive: game.enemies.filter((e) => e.kind === "soldier" && e.state !== "dead").length,
       lockOn: !!game.lockTarget,
       pixelScale: loop.pixelScale,
     };
   },
   /* scenario hooks */
+  teleport(x: number, z: number) { game.teleport(x, z); },
   teleportBeat(beat: "grace" | "pack" | "scarab" | "gate" | "boss") {
     game.teleportBeat(beat);
   },
@@ -521,6 +533,7 @@ installHarness({
   killPlayer() { game.killPlayer(); },
   giveShards(n: number) { game.giveShards(n); },
   riposteWindow() { game.debugRiposteWindow(); },
+  bossMove(move: "sweep" | "daggers" | "overhead" | "hammer" | "tail") { game.debugBossMove(move); },
   killSoldiers(pack = 0) {
     for (const e of game.enemies) {
       if (e.kind === "soldier" && (pack < 0 || e.pack === pack) && e.state !== "dead") {

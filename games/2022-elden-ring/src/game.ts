@@ -484,7 +484,7 @@ export class Game {
         break;
       case "engage": {
         const speed = this.bossPhase === 2 ? 4.3 : 3.4;
-        if (d > 3.2) this.enemyMove(e, p.x, p.z, dt, speed);
+        if (d > 2.6) this.enemyMove(e, p.x, p.z, dt, speed); // in your face
         this.bossMoveCD -= dt;
         if (this.bossMoveCD <= 0) {
           // pick a move by range, all with clean telegraphs
@@ -751,6 +751,19 @@ export class Game {
     this.boss.state = "stagger";
     this.boss.stateT = 0;
     this.boss.riposteT = 2.6;
+  }
+
+  /** force a boss move's windup now (shot 07: the hammer telegraph) */
+  debugBossMove(move: BossMove): void {
+    const b = this.boss;
+    b.attackKind = move;
+    b.state = "windup";
+    b.stateT = 0;
+    if (move === "hammer") {
+      b.hammerX = this.player.x;
+      b.hammerZ = this.player.z;
+    }
+    this.events.onBossMove?.(move);
   }
 
   debugFinish(): void {

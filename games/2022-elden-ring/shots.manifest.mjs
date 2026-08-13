@@ -49,24 +49,26 @@ export default [
     },
   },
 
-  // 06 — the riposte: staggered Warden, the killing light
+  // 06 — the riposte: staggered Warden, point blank, the killing light
   {
     name: "06-parry-riposte",
     async run(page, game) {
+      await page.evaluate(() => window.__game.teleport(0, -188)); // toe to toe
       await game("riposteWindow");
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(250);
       await page.mouse.down(); // the riposte
-      await page.waitForTimeout(320);
+      await page.waitForTimeout(300);
       await page.mouse.up();
     },
   },
 
-  // 07 — phase 2: the golden hammer falls
+  // 07 — phase 2: the golden hammer falls on your mark
   {
     name: "07-phase2-hammer",
     async run(page, game) {
       await game("setBossPhase", 2);
-      await page.waitForTimeout(2600); // hammer summon in the cycle
+      await game("bossMove", "hammer"); // the gold ring + the descent
+      await page.waitForTimeout(650);   // mid-telegraph
     },
   },
 

@@ -31,20 +31,34 @@ console.log("phase:", await phase());
 await page.keyboard.press("KeyE");
 await page.waitForTimeout(300);
 
-// soldier fight: teleport to pack one, lock on, real swings until one dies
+// soldier fight: lock on, swing, roll out, flask when low, re-engage on death
 await page.evaluate(() => window.__game.teleportBeat("pack"));
 await page.evaluate(() => window.__game.lockOn());
 let soldierDead = false;
-for (let i = 0; i < 40; i++) {
-  await page.mouse.down(); // light
-  await page.waitForTimeout(120);
-  await page.mouse.up();
-  await page.waitForTimeout(420); // swing resolves
-  await page.keyboard.press("Space"); // roll through the reply
-  await page.waitForTimeout(300);
-  const d = await dbg();
+for (let i = 0; i < 46; i++) {
+  let d = await dbg();
+  if (d.phase === "dead") {
+    // runback — this is the game
+    await page.waitForFunction(() => window.__game.phase === "play", undefined, { timeout: 60000 });
+    await page.evaluate(() => {
+      window.__game.teleportBeat("pack");
+      window.__game.lockOn();
+    });
+    continue;
+  }
   if (d.soldiersAlive < 6) { soldierDead = true; break; }
-  if (d.hp <= 0) break; // died trying — the sim continues
+  if (d.hp < 40) await page.keyboard.press("KeyQ");
+  if (!d.lockOn) await page.evaluate(() => window.__game.lockOn());
+  await page.keyboard.down("KeyW"); // close in (they sit at sword range)
+  await page.mouse.down();
+  await page.waitForTimeout(150);
+  await page.mouse.up();
+  await page.waitForTimeout(350);
+  await page.keyboard.up("KeyW");
+  await page.keyboard.down("KeyS");
+  await page.keyboard.press("Space"); // roll away from the reply
+  await page.waitForTimeout(250);
+  await page.keyboard.up("KeyS");
 }
 console.log("soldier killed:", soldierDead, "hp:", (await dbg()).hp);
 if (!soldierDead) errors.push("no soldier died to real swings");
@@ -67,13 +81,20 @@ await page.keyboard.up("KeyW");
 await page.evaluate(() => window.__game.lockOn());
 await page.waitForTimeout(400);
 const bossBefore = (await dbg()).boss.hp;
-for (let i = 0; i < 14; i++) {
+for (let i = 0; i < 16; i++) {
+  // step to sword range (deterministic — the boss keeps moving)
+  await page.evaluate(() => {
+    const g = window.__game;
+    const b = g.debug().boss;
+    g.teleport(b.x, b.z + 2.2);
+    g.lockOn();
+  });
   await page.mouse.down();
-  await page.waitForTimeout(120);
+  await page.waitForTimeout(150);
   await page.mouse.up();
-  await page.waitForTimeout(450);
+  await page.waitForTimeout(400);
   await page.keyboard.press("Space");
-  await page.waitForTimeout(250);
+  await page.waitForTimeout(220);
   const d = await dbg();
   if (d.boss.hp < bossBefore) break;
 }
@@ -84,8 +105,12 @@ if (d.phase !== "boss") errors.push("boss phase never started");
 
 // harness-assisted kill → GREAT ENEMY FELLED → results
 await page.evaluate(() => {
-  window.__game.bossHp(30);
-  window.__game.riposteWindow();
+  const g = window.__game;
+  g.bossHp(30);
+  g.riposteWindow();
+  const b = g.debug().boss;
+  g.teleport(b.x, b.z + 2.2); // point blank for the riposte
+  g.lockOn();
 });
 await page.mouse.down(); // the riposte (65 × 1 = 65 > 30)
 await page.waitForTimeout(400);

@@ -337,9 +337,7 @@ export function buildWarden(): WardenRig {
           g.rotation.z = 0;
       }
       if (move === "hammer" && (state === "windup" || state === "attack")) {
-        hammer.visible = true;
-        hammer.position.set(0, 8 - stateT * 6, 0); // descends on the mark
-        hammer.rotation.z = 0.4;
+        hammer.visible = true; // position driven by main (over the mark)
       }
     },
   };
