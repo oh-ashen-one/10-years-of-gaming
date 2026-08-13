@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>REQUIEM WARD — a 2026 tale</title>
+    <style>
+      :root { color-scheme: dark; }
+      html, body {
+        margin: 0; padding: 0; width: 100%; height: 100%;
+        overflow: hidden; background: #05060a;
+        font-family: Georgia, "Times New Roman", serif;
+        user-select: none; -webkit-user-select: none;
+      }
+      #app { position: fixed; inset: 0; }
+      #app canvas { display: block; }
+      #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+      #title {
+        position: fixed; inset: 0; z-index: 30; display: flex;
+        flex-direction: column; align-items: center; justify-content: center;
+        background: transparent; pointer-events: auto; cursor: pointer;
+      }
+      #title.hidden { display: none; }
+      .t-logo {
+        font-size: min(9vw, 96px); font-weight: 700; font-style: normal;
+        letter-spacing: 0.22em; line-height: 1; text-align: center;
+        color: #c8d4c8;
+        text-shadow:
+          0.03em 0.03em 0 #3a4a3a,
+          0.07em 0.07em 0 #05060a;
+      }
+      .t-sub {
+        margin-top: 16px; color: #7a8a80; font-weight: 400;
+        letter-spacing: 0.5em; text-indent: 0.5em; font-size: clamp(10px, 1.5vw, 15px);
+        text-transform: uppercase; font-style: italic;
+      }
+      .t-start {
+        margin-top: 48px; color: #c8d4c8; font-weight: 400; font-style: italic;
+        font-size: clamp(14px, 2vw, 20px); letter-spacing: 0.3em;
+        padding: 12px 38px; border: 2px solid #3a4a3a;
+        background: rgba(5,6,10,0.65);
+        animation: pulse 1.6s steps(2) infinite;
+      }
+      @keyframes pulse { 50% { background: rgba(200,212,200,0.2); } }
+      .t-keys {
+        margin-top: 36px; color: #5a6a60; font-size: 12px; letter-spacing: 0.14em;
+        text-align: center; line-height: 2.0; text-transform: uppercase;
+        font-family: "Segoe UI", Arial, sans-serif;
+      }
+      .t-keys b { color: #c8d4c8; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="hud"></div>
+    <div id="title">
+      <div class="t-logo">REQUIEM WARD</div>
+      <div class="t-sub">twelve bullets and a flashlight &middot; 2026</div>
+      <div class="t-start">PRESS ENTER</div>
+      <div class="t-keys">
+        <b>WASD</b> move &nbsp; <b>Q/E · ←/→</b> turn &nbsp; <b>RMB</b> aim &nbsp; <b>LMB</b> fire<br/>
+        <b>F</b> interact &nbsp; <b>TAB</b> inventory &nbsp; <b>SHIFT</b> walk fast (noisy) &nbsp; <b>G</b> flashlight
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
