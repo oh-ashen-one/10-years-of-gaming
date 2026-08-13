@@ -706,12 +706,13 @@ export class Game {
   /** mid-air above the valley, glider open (shot 05) */
   debugGlide(): void {
     const p = this.player;
-    p.x = 45;
-    p.z = 138;
-    p.y = 24;
+    p.x = 33;
+    p.z = 150; // OFF the plateau's north slope — real air below
+    p.y = 19;
+    p.stamina = 100;
     p.gliding = true;
     p.grounded = false;
-    p.heading = Math.PI + 0.5; // toward the rings
+    p.heading = Math.atan2(30 - p.x, 155 - p.z); // threading ring one dead-on
     this.events.onGlide?.(true);
   }
 

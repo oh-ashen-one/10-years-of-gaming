@@ -514,6 +514,7 @@ installHarness({
       stamina: p.stamina,
       energy: p.energy,
       quest: game.quest,
+      gliding: p.gliding,
       boss: { state: game.boss.state, hp: game.boss.hp },
       mobsAlive: game.mobs.filter((m) => !m.dead).length,
       biggestSwirl: game.biggestSwirl,
@@ -526,6 +527,9 @@ installHarness({
   toCamp() { game.teleport(CAMP.x + 10, CAMP.z + 10); },
   toCliff() { game.teleport(CLIFF.x, CLIFF.z - 10); },
   toArena() { game.teleport(ARENA.x, ARENA.z + ARENA.r - 4); },
+  face(x: number, z: number) {
+    game.player.heading = Math.atan2(x - game.player.x, z - game.player.z);
+  },
   glide() { game.debugGlide(); },
   setEnergy(n: number) { game.setEnergy(n); },
   stance(s: Stance) { game.setStance(s); },

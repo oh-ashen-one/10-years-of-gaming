@@ -1,7 +1,22 @@
 /**
  * shots.manifest.mjs — the 8 named film-test shots for GALE MEADOW.
  * Authored scenarios through window.__game hooks; real frames only.
+ * HUD flashes tick on (clamped) game time — poll state, never sleeps.
  */
+
+async function waitMsgClear(page) {
+  await page
+    .waitForFunction(
+      () => {
+        const el = document.querySelector("#hud-msg");
+        return !el || getComputedStyle(el).display === "none";
+      },
+      undefined,
+      { timeout: 60000 },
+    )
+    .catch(() => {});
+}
+
 export default [
   // 01 — poster title: the meadow, wind in the grass, spired city far
   { name: "01-title" },
@@ -41,13 +56,22 @@ export default [
     },
   },
 
-  // 05 — the glide: updraft rings across the valley
+  // 05 — the glide: airborne over the valley, threading the updraft rings
   {
     name: "05-glide-valley",
     async run(page, game) {
       await game("killCamp");
-      await game("glide"); // mid-air, glider open, rings ahead
-      await page.waitForTimeout(1100);
+      await waitMsgClear(page); // CAMP CLEARED fades first
+      await game("glide"); // off the plateau, ring one dead ahead
+      await page.waitForFunction(
+        () => {
+          const d = window.__game.debug();
+          return d.gliding && d.player[1] > 20; // the ring's updraft just lifted us
+        },
+        undefined,
+        { timeout: 15000 },
+      ).catch(() => {});
+      await page.waitForTimeout(200); // rings two and three read ahead
     },
   },
 
@@ -56,6 +80,7 @@ export default [
     name: "06-boss-spin-dodge",
     async run(page, game) {
       await game("toArena");
+      await game("face", -40, 224); // the boss, dead ahead (the glide ends facing away)
       await game("bossState", "spin");
       await page.waitForTimeout(900); // spinning toward us
       await page.keyboard.press("ShiftLeft"); // the dodge
@@ -67,6 +92,7 @@ export default [
   {
     name: "07-core-exposed",
     async run(page, game) {
+      await game("face", -40, 224); // stay on him after the dodge
       await game("bossState", "core");
       await page.waitForTimeout(500);
       await page.mouse.down(); // wail on it
