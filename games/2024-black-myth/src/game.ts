@@ -355,7 +355,7 @@ export class Game {
       if (d > range) continue;
       const dx = e.x - p.x;
       const dz = e.z - p.z;
-      if ((dx * Math.sin(p.heading) + dz * Math.cos(p.heading)) / (d || 1) < minDot) continue;
+      if (d > 0.3 && (dx * Math.sin(p.heading) + dz * Math.cos(p.heading)) / d < minDot) continue;
       let dmg = heavy ? spec!.dmg : LIGHT_DMG[stage - 1];
       // poke punishes the whirlwind recovery
       if (heavy && p.stance === "poke" && e.kind === "abbot" && e.whirlRecover) dmg = Math.round(dmg * POKE_PUNISH_MULT);
@@ -465,6 +465,8 @@ export class Game {
         }
         if (d > 2.2) {
           this.enemyMove(e, p.x, p.z, dt, 3.6, false);
+        } else if (d < 1.2) {
+          this.enemyMove(e, e.x + (e.x - p.x) + 0.3, e.z + (e.z - p.z) + 0.2, dt, 1.6, false); // hop back
         } else if (e.stateT > 0.6) {
           // the LEAP is the showcase (immobilize it mid-air); swipe up close
           e.move = d < 2.6 && Math.random() < 0.55 ? "swipe" : "leap";
@@ -552,6 +554,7 @@ export class Game {
     switch (e.state) {
       case "engage": {
         if (d > 3.2) this.enemyMove(e, p.x, p.z, dt, this.bossPhase === 2 ? 4.4 : 3.6, true);
+        else if (d < 1.9) this.enemyMove(e, e.x + (e.x - p.x) + 0.3, e.z + (e.z - p.z) + 0.2, dt, 2.4, true); // give ground
         this.bossMoveCD -= dt;
         if (this.bossMoveCD <= 0) {
           let move: BossMove;
@@ -736,13 +739,14 @@ export class Game {
     this.comboT = Math.max(0, this.comboT - dt);
     if (this.comboT <= 0) this.combo = 0;
 
-    // a queued swing follows through
+    // a swing ends — stamp the chain clock FIRST…
+    if (p.attackT <= 0 && p.attackDur > 0) {
+      if (!p.attackHeavy) p.chainEndT = this.time;
+      p.attackDur = 0;
+    }
+    // …THEN a queued swing follows through (so the chain reads fresh)
     if (p.queued && p.attackT <= 0 && !p.dead && p.dodgeT <= 0) {
       this.startSwing(false);
-    }
-    if (p.attackT <= 0 && p.attackDur > 0 && !p.attackHeavy) {
-      p.chainEndT = this.time;
-      p.attackDur = 0;
     }
 
     // movement (dodge dash overrides; sipping slows)
@@ -867,6 +871,9 @@ export class Game {
   debugLesserLeap(): Enemy | null {
     const e = this.nearestEnemy(20);
     if (!e || e.kind !== "lesser") return null;
+    // stage it close — the leap covers ~4.5m, dead into the camera's lap
+    e.x = this.player.x + Math.sin(this.player.heading) * 4.5;
+    e.z = this.player.z + Math.cos(this.player.heading) * 4.5;
     e.move = "leap";
     e.state = "windup";
     e.stateT = 0;

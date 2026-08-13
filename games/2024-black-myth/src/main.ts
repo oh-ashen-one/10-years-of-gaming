@@ -172,22 +172,28 @@ function bloomSeals(x: number, y: number, z: number, dur: number, big: boolean):
 
 // perfect-dodge afterimage ghosts
 const ghosts: { rig: ReturnType<typeof buildMonk>; t: number }[] = [];
-function stampGhost(): void {
-  const rig = buildMonk();
-  rig.group.traverse((o) => {
-    if (o instanceof THREE.Mesh) {
-      o.material = new THREE.MeshBasicMaterial({
-        color: PAL.extra.goldHot, transparent: true, opacity: 0.5, depthWrite: false,
-      });
-    }
-  });
-  rig.group.position.copy(monk.group.position);
-  rig.group.rotation.copy(monk.group.rotation);
-  rig.update(0, 0, 0, "dodge", 0.15);
-  rig.group.position.copy(monk.group.position); // the pose writes local y
-  world.add(rig.group);
-  ghosts.push({ rig, t: 0.8 });
-  if (ghosts.length > 3) {
+function stampGhost(dirX: number, dirZ: number): void {
+  // a two-ghost streak along the dodge line, PAST the attacker so it reads
+  for (const along of [0.9, 1.8]) {
+    const rig = buildMonk();
+    rig.group.traverse((o) => {
+      if (o instanceof THREE.Mesh) {
+        o.material = new THREE.MeshBasicMaterial({
+          color: PAL.extra.goldHot, transparent: true, opacity: 0.6, depthWrite: false,
+        });
+      }
+    });
+    rig.update(0, 0, 0, "dodge", 0.15);
+    rig.group.position.set(
+      monk.group.position.x + dirX * along,
+      monk.group.position.y,
+      monk.group.position.z + dirZ * along,
+    );
+    rig.group.rotation.y = monk.group.rotation.y;
+    world.add(rig.group);
+    ghosts.push({ rig, t: 0.8 });
+  }
+  while (ghosts.length > 4) {
     const old = ghosts.shift()!;
     world.remove(old.rig.group);
   }
@@ -252,7 +258,7 @@ game.events = {
   onPerfectDodge() {
     audio.perfectDodge();
     perfectSlowT = 0.75;
-    stampGhost();
+    stampGhost(game.player.dodgeDX, game.player.dodgeDZ);
     hud.msg("PERFECT DODGE", 800);
   },
   onImmobilize(e) {
@@ -272,6 +278,7 @@ game.events = {
   },
   onShrine(which) {
     audio.shrine();
+    rebuildLessers(); // rest respawns the court — rebuild their rigs
     hud.msg(which === "gate" ? "GATE SHRINE — REST · GOURD REFILLED" : "INCENSE SHRINE — REST · GOURD REFILLED", 2200);
   },
   onFogGate() {
@@ -402,7 +409,8 @@ function updateCamera(dt: number, time: number): void {
     return;
   }
   const t = game.lockTarget;
-  if (t && t.state !== "dead" && !p.dead) {
+  const td = t ? Math.hypot(t.x - p.x, t.z - p.z) : 0;
+  if (t && t.state !== "dead" && !p.dead && td > 2.6) {
     const dx = t.x - p.x;
     const dz = t.z - p.z;
     const d = Math.hypot(dx, dz) || 1;
@@ -541,12 +549,12 @@ const loop = new FrameLoop({
       }
     }
 
-    /* ---- ghosts fade ---- */
+    /* ---- ghosts fade (on GAME time — the slow-mo streak lingers) ---- */
     for (let i = ghosts.length - 1; i >= 0; i--) {
       const gh = ghosts[i];
-      gh.t -= rawDt;
+      gh.t -= dt;
       gh.rig.group.traverse((o) => {
-        if (o instanceof THREE.Mesh) (o.material as THREE.MeshBasicMaterial).opacity = Math.max(0, gh.t / 0.8) * 0.5;
+        if (o instanceof THREE.Mesh) (o.material as THREE.MeshBasicMaterial).opacity = Math.max(0, gh.t / 0.8) * 0.6;
       });
       if (gh.t <= 0) {
         world.remove(gh.rig.group);
@@ -667,6 +675,7 @@ installHarness({
       focus: +p.focus.toFixed(2),
       stance: p.stance,
       combo: game.combo,
+      attack: { t: +p.attackT.toFixed(2), stage: p.attackStage, heavy: p.attackHeavy },
       immobilizeCD: +game.immobilizeCD.toFixed(1),
       deaths: game.deaths,
       perfectDodges: game.perfectDodges,
@@ -685,6 +694,7 @@ installHarness({
   setBossPhase(n: 1 | 2) { game.setBossPhase(n); },
   bossHp(n: number) { game.bossHp(n); },
   killPlayer() { game.killPlayer(); },
+  heal() { game.player.hp = 100; },
   giveFocus(n = 3) { game.giveFocus(n); },
   stance(s: "smash" | "poke") {
     if (game.player.stance !== s) game.swapStance();
@@ -694,6 +704,22 @@ installHarness({
   bossMove(move: BossMove) { game.debugBossMove(move); },
   immobilize() { game.immobilize(); },
   dodge() { game.dodge(0, 0); },
+  /** dodge THROUGH the nearest threat — the only way to earn a perfect */
+  dodgeInto() {
+    const p = game.player;
+    let t = game.lockTarget && game.lockTarget.state !== "dead" ? game.lockTarget : null;
+    if (!t) {
+      let bd = 30;
+      for (const e of game.enemies) {
+        if (e.state === "dead") continue;
+        const d = game.distToPlayer(e);
+        if (d < bd) { bd = d; t = e; }
+      }
+    }
+    const dx = t ? t.x - p.x : Math.sin(p.heading);
+    const dz = t ? t.z - p.z : Math.cos(p.heading);
+    game.dodge(dx, dz);
+  },
   light() { game.lightAttack(); },
   heavy() { game.heavyAttack(); },
   gourd() { game.drinkGourd(); },

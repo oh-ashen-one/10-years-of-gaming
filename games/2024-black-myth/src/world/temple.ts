@@ -112,11 +112,11 @@ export function buildBamboo(world: THREE.Group): void {
         node.position.set(x + lean * (h * n / 4) * 0.5, y0 + (h * n) / 4, z);
         world.add(node);
       }
-      // leaf tufts
-      for (let l = 0; l < 2; l++) {
-        const leaf = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.5), mLeaf);
-        leaf.position.set(x + lean * h * 0.5, y0 + h - l * 0.8, z);
-        leaf.rotation.set(-0.4, hash1(i * 11 + l) * Math.PI, 0.2);
+      // leaf tufts — small, dark, drooping off the crown
+      for (let l = 0; l < 3; l++) {
+        const leaf = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.3), mLeaf);
+        leaf.position.set(x + lean * h * 0.5, y0 + h - 0.3 - l * 0.5, z);
+        leaf.rotation.set(-1.0, hash1(i * 11 + l) * Math.PI, 0.15);
         leaf.material.side = THREE.DoubleSide;
         world.add(leaf);
       }

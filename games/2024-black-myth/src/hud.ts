@@ -145,6 +145,12 @@ export class HUD {
 
   update(game: Game): void {
     const p = game.player;
+    // near-invisible on the poster: nothing but the scene
+    const show = game.phase !== "title";
+    this.hpBar.parentElement!.parentElement!.style.display = show ? "block" : "none";
+    this.stanceEl.style.display = show ? "flex" : "none";
+    this.sealEl.style.display = show ? "flex" : "none";
+    if (!show) return;
     this.hpBar.style.width = `${Math.max(0, (p.hp / 100) * 100)}%`;
     this.gourdEl.textContent = "◈".repeat(p.gourd) + "·".repeat(Math.max(0, 4 - p.gourd));
     // focus beads: full / partial / empty
