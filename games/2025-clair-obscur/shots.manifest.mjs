@@ -71,13 +71,16 @@ export default [
   {
     name: "04-parry-counter",
     async run(page, game) {
-      // an attack is already incoming from 03 (or force a fresh one)
-      await page.evaluate(() => {
-        const d = window.__game.debug();
-        if (!d.battle || !d.battle.incoming) window.__game.forceAttack("stroke");
-      });
+      const before = (await dbg(page)).parriesLanded;
+      await game("forceAttack", "stroke"); // stroke accepts the parry (sweep doesn't)
       await parryTheImpact(page);
-      await page.waitForTimeout(250); // the ring flashes (CSS, wall-clock)
+      // the ring starts AT the impact — wait for the counter to land
+      await page.waitForFunction(
+        (b) => window.__game.debug().parriesLanded > b,
+        before,
+        { timeout: 20000 },
+      ).catch(() => {});
+      // capture NOW — the ring is mid-flash, the splash is up
     },
   },
 
@@ -110,6 +113,12 @@ export default [
     async run(page, game) {
       await waitMsgClear(page);
       await game("heal");
+      await game("winBattle"); // close out fight 1 for real (dissolves)
+      await page.waitForFunction(
+        () => window.__game.phase === "explore",
+        undefined,
+        { timeout: 30000 },
+      );
       await game("gotoBeat", "boss");
       await page.waitForFunction(() => window.__game.phase === "battle", undefined, { timeout: 20000 });
       await page.waitForTimeout(2200); // the wide side-cam glides in

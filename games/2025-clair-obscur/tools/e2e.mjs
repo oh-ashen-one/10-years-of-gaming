@@ -48,10 +48,14 @@ if ((await phase()) !== "explore") errors.push("never left the title");
 // fight 1 — real menu turns, real defenses
 await game("gotoBeat", "fight1");
 await page.waitForFunction(() => window.__game.phase === "battle", undefined, { timeout: 20000 });
+// a guaranteed sweep up front — dodge it for real (RNG owes us nothing)
+await game("forceAttack", "sweep");
+await defendTheImpact("dodge");
 let dodged = 0;
 let parried = 0;
+let d = await dbg();
 for (let i = 0; i < 120; i++) {
-  const d = await dbg();
+  d = await dbg();
   if (!d.battle) break; // fight 1 won
   if (d.battle.turn === "player") {
     await page.keyboard.press("Digit1"); // strike (1 daub)
@@ -78,7 +82,7 @@ await game("gotoBeat", "fight2");
 await page.waitForFunction(() => window.__game.phase === "battle", undefined, { timeout: 20000 });
 let sawBreak = false;
 for (let i = 0; i < 160; i++) {
-  const d = await dbg();
+  d = await dbg();
   if (!d.battle) break;
   const mime = d.battle.enemies.find((e) => e.kind === "mime");
   if (mime && mime.shield === 0) sawBreak = true;
