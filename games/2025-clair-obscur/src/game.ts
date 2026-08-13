@@ -617,6 +617,17 @@ export class Game {
     if (boss) boss.hp = n;
   }
 
+  /** dissolve every living foe of the current fight (shot sequencing) */
+  winBattle(): void {
+    const b = this.battle;
+    if (!b) return;
+    for (const e of this.enemies) {
+      if (e.fight === b.fight && (e.state === "alive" || e.state === "stagger")) {
+        this.damageEnemy(e, 9999, "debug");
+      }
+    }
+  }
+
   /** force an incoming attack pattern NOW from the first living foe (shots) */
   forceAttack(kind: AttackKind): void {
     const b = this.battle;

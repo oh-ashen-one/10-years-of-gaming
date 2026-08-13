@@ -696,6 +696,7 @@ installHarness({
   setMeter(n: number) { game.setMeter(n); },
   bossHp(n: number) { game.bossHp(n); },
   forceAttack(kind: AttackKind) { game.forceAttack(kind); },
+  winBattle() { game.winBattle(); },
   strike() { game.strike(); },
   aimStart() { game.aimStart(); },
   aimFire() { game.aimFire(); },
