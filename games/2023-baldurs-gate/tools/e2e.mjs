@@ -49,20 +49,40 @@ let d = await dbg();
 console.log("bodies in river:", d.bodiesInRiver);
 if (d.bodiesInRiver < 1) errors.push("shove never put anyone in the river");
 
-// finish the fight through real strikes + end turns
-for (let i = 0; i < 60; i++) {
+// finish the fight through real turns: dip the blade, Tab-cycle to a
+// reachable foe, strike (fire), barrel as the ranged fallback
+for (let i = 0; i < 500; i++) {
   d = await dbg();
-  if (!d.combat || d.combat.foes === 0) break;
+  if (d.phase !== "combat" || !d.combat || d.combat.foes === 0) break;
   if (d.combat.active === "YOU") {
-    await page.keyboard.press("Digit1"); // strike (may miss — that's dice)
-    await page.waitForTimeout(250);
+    await page.keyboard.press("Digit3"); // dip the blade (bonus action)
+    await page.waitForTimeout(120);
+    // the target lock can sit on a far foe — Tab-cycle until a swing lands
+    for (let k = 0; k < 4; k++) {
+      const before = (await dbg()).rolls;
+      await page.keyboard.press("Digit1");
+      await page.waitForTimeout(120);
+      if ((await dbg()).rolls > before) break; // a real swing (hit or miss)
+      await page.keyboard.press("Tab");
+      await page.waitForTimeout(120);
+    }
+    const before = (await dbg()).rolls;
+    await page.keyboard.press("Digit4"); // barrel fallback (range 8.5)
+    await page.waitForTimeout(120);
+    if ((await dbg()).rolls === before) {
+      // nobody in reach — close the distance (8m budget), camera-relative S = south
+      await page.keyboard.down("KeyS");
+      await page.waitForTimeout(700);
+      await page.keyboard.up("KeyS");
+    }
     await page.keyboard.press("Enter");  // end turn
   }
-  await page.waitForTimeout(500);
+  if (i % 25 === 0) console.log(`  round ${d.combat?.round} foes ${d.combat?.foes} active ${d.combat?.active}`);
+  await page.waitForTimeout(400);
 }
 d = await dbg();
 console.log("combat over, phase:", d.phase);
-if (d.phase !== "explore" && d.phase !== "results") errors.push("combat never resolved");
+if (d.phase !== "explore") errors.push("combat never resolved to a win (phase " + d.phase + ")");
 
 // loot the chest → results
 await page.evaluate(() => window.__game.loot());
@@ -70,6 +90,7 @@ await page.waitForTimeout(600);
 d = await dbg();
 console.log("end phase:", d.phase, "gold:", d.gold, "rolls logged:", d.rolls);
 if (d.phase !== "results") errors.push("never reached results");
+if (d.gold < 560) errors.push("the chest gold never landed");
 if (d.rolls < 3) errors.push("rolls history is empty");
 
 console.log("console errors:", errors.length ? errors : "none");

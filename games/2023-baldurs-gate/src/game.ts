@@ -222,11 +222,14 @@ export class Game {
     } else {
       // a clean pass: he steps aside; the chest waits (and he watches)
       this.setPhase("explore");
-      this.events.onBark?.(
-        o === "robbed"
-          ? "MAGE: “Sixty gold lighter and he let us WALK past him. You're a poet.”"
-          : "MAGE: “Remind me to never haggle with you.”",
-      );
+      // delayed so the dice verdict gets its moment before the quip lands
+      setTimeout(() => {
+        this.events.onBark?.(
+          o === "robbed"
+            ? "MAGE: “Sixty gold lighter and he let us WALK past him. You're a poet.”"
+            : "MAGE: “Remind me to never haggle with you.”",
+        );
+      }, 2600);
     }
   }
 
@@ -289,6 +292,7 @@ export class Game {
       if (partyAlive) {
         this.events.onCombatWin?.();
         this.setPhase("explore");
+        this.combat = null; // hand the body back to the explorer
         this.events.onBark?.(
           this.path === "fight-surprised"
             ? "MAGE: “You could've just paid him, you know.”"
@@ -537,7 +541,8 @@ export class Game {
     const dist = Math.hypot(t.x - m.x, t.z - m.z);
     if (dist > 9) this.aiMoveToward(m, t.x, t.z, 5);
     const bunched = foes.filter((f) => Math.hypot(f.x - t.x, f.z - t.z) < 3).length >= 2;
-    if (bunched) {
+    const alreadyGreased = c.grease.some((g) => !g.lit && Math.hypot(t.x - g.x, t.z - g.z) < g.r);
+    if (bunched && !alreadyGreased) {
       // grease puddle under the cluster
       const g: Grease = { x: t.x, z: t.z, r: 2.4, igniteT: 0, lit: false };
       c.grease.push(g);
@@ -616,17 +621,24 @@ export class Game {
   }
 
   private aiMoveToward(c: Combatant, tx: number, tz: number, budget: number): void {
-    const dx = tx - c.x;
-    const dz = tz - c.z;
-    const d = Math.hypot(dx, dz) || 1;
-    const step = Math.min(budget, d - 1.8);
-    if (step <= 0) return;
-    const nx = c.x + (dx / d) * step;
-    const nz = c.z + (dz / d) * step;
-    if (inBounds(nx, nz)) {
-      c.x = nx;
-      c.z = nz;
-    }
+    const tryStep = (gx: number, gz: number): boolean => {
+      const dx = gx - c.x;
+      const dz = gz - c.z;
+      const d = Math.hypot(dx, dz) || 1;
+      const step = Math.min(budget, d - 1.8);
+      if (step <= 0) return true; // close enough
+      const nx = c.x + (dx / d) * step;
+      const nz = c.z + (dz / d) * step;
+      if (inBounds(nx, nz)) {
+        c.x = nx;
+        c.z = nz;
+        return true;
+      }
+      return false;
+    };
+    if (tryStep(tx, tz)) return;
+    // the river blocks the straight line — funnel onto the bridge lane
+    tryStep(Math.max(-2.5, Math.min(2.5, c.x + (c.x > 0 ? -budget : budget))), c.z);
   }
 
   /* ------------------------------------------------------------- update -- */
@@ -747,13 +759,29 @@ export class Game {
     const c = this.combat!;
     const a = c.order.find((o) => o.kind === "player")!;
     const g = c.order.find((o) => o.kind === "guard" && o.alive)!;
-    a.x = 0;
-    a.z = -1;             // on the bridge
-    g.x = 3.4;
+    a.x = 1.0;
+    a.z = -0.4;           // on the bridge, within shove reach
+    g.x = 3.0;
     g.z = 0.5;            // at the deck's east edge — river beyond
+    const foes = c.order.filter((o) => o.side === "enemy" && o.alive);
+    this.targetIdx = Math.max(0, foes.indexOf(g)); // the shove must target HIM
     c.turnIdx = c.order.indexOf(a);
     a.actionUsed = false;
     this.forceRoll(17);
+  }
+
+  /** drop every foe still standing (shots 08–09: the aftermath) */
+  forceWinCombat(): void {
+    if (this.phase !== "combat" || !this.combat) return;
+    for (const o of this.combat.order) {
+      if (o.side === "enemy" && o.alive) {
+        o.alive = false;
+        o.hp = 0;
+        this.kills++;
+        this.events.onDeath?.(o, false);
+      }
+    }
+    this.nextTurn(); // no foes left → the win path → explore
   }
 
   /** ignite a grease pool under the guards (shot 07) */
@@ -762,13 +790,13 @@ export class Game {
     const c = this.combat!;
     const guards = c.order.filter((o) => o.kind === "guard" && o.alive);
     if (guards.length >= 2) {
-      guards[0].x = -5;
-      guards[0].z = 8;
-      guards[1].x = -4;
-      guards[1].z = 9.5;
-      const g: Grease = { x: -4.5, z: 8.7, r: 2.6, igniteT: 0, lit: false };
+      guards[0].x = -1.6;
+      guards[0].z = 2.2;
+      guards[1].x = -0.4;
+      guards[1].z = 3.4;
+      const g: Grease = { x: -1, z: 2.8, r: 2.6, igniteT: 0, lit: false };
       c.grease.push(g);
-      this.igniteUnder(-4.5, 8.7);
+      this.igniteUnder(-1, 2.8);
     }
   }
 

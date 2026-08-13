@@ -77,6 +77,8 @@ export class HUD {
       #hud-nums { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
       #hud-nums .n { position: absolute; font: italic 900 22px Georgia, serif;
         transform: translate(-50%,-50%); text-shadow: 2px 2px 0 ${C.ink}; }
+      #hud-results { position: absolute; inset: 0; display: none;
+        align-items: center; justify-content: center; background: rgba(16,10,20,0.55); }
       #hud-results .card { border: 3px solid #8a5a2a; background: rgba(16,10,20,0.95);
         box-shadow: 10px 10px 0 rgba(0,0,0,0.5); padding: 30px 46px; min-width: 520px;
         max-height: 80vh; overflow: auto; }

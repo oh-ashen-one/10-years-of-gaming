@@ -471,6 +471,7 @@ installHarness({
   startFight(surprised = true) { buildFigs(); game.startFight(surprised); },
   forceShoveKill() { game.forceShoveKill(); },
   forceGreaseFire() { game.forceGreaseFire(); },
+  winFight() { game.forceWinCombat(); },
   shove() { game.shove(); },
   strike() { game.strike(); },
   endTurn() { game.endTurn(); },
