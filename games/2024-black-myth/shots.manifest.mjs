@@ -35,13 +35,24 @@ export default [
     },
   },
 
-  // 03 — the staff string: mid-swing, the gold trail arc quantizes
+  // 03 — the staff string: three real clicks INTO a lesser, the 連 counter up
   {
     name: "03-staff-combo",
     async run(page, game) {
+      await game("heal");
       await game("lockOn");
-      await page.mouse.click(640, 400); // LMB — light 1
-      await page.waitForTimeout(450);   // mid-swing, trail lit
+      // a real string on a real imp — the combo counter is DOM (no capture race)
+      for (let i = 0; i < 6; i++) {
+        if ((await dbg(page)).combo >= 3) break;
+        await page.mouse.click(640, 400);
+        await page.waitForTimeout(420);
+      }
+      await page.waitForFunction(
+        () => window.__game.debug().combo >= 3,
+        undefined,
+        { timeout: 15000 },
+      ).catch(() => {});
+      await page.waitForTimeout(150); // the counter + the hit flash read
     },
   },
 
@@ -49,7 +60,19 @@ export default [
   {
     name: "04-immobilize",
     async run(page, game) {
-      await page.waitForTimeout(1200); // let the swing finish
+      await page.waitForTimeout(1200); // let the string finish
+      await game("teleport", 0, -2);
+      await game("rest"); // the shrine returns the court's lessers
+      await page.waitForTimeout(400);
+      await game("teleportBeat", "court");
+      await page.waitForFunction(
+        () => {
+          const d = window.__game.debug();
+          return d.enemies.some((e) => e.kind === "lesser" && e.d < 13);
+        },
+        undefined,
+        { timeout: 30000 },
+      );
       await game("lesserLeap");        // force the crouch → leap
       await page.waitForFunction(
         () => {
@@ -69,6 +92,7 @@ export default [
   {
     name: "05-perfect-dodge",
     async run(page, game) {
+      await game("heal");
       for (let attempt = 0; attempt < 3; attempt++) {
         const before = (await dbg(page)).perfectDodges;
         await game("lesserSwipe"); // staged point-blank, windup 0.42s (game time)
@@ -76,18 +100,21 @@ export default [
           () => {
             const d = window.__game.debug();
             return d.enemies.some(
-              (e) => e.kind === "lesser" && e.state === "windup" && e.stateT > 0.26,
+              (e) => e.kind === "lesser" && e.state === "windup" && e.stateT > 0.3,
             );
           },
           undefined,
           { timeout: 20000 },
         );
-        await game("dodge");
+        await game("dodgeInto"); // THROUGH the swipe — that's what earns the ghost
         await page.waitForTimeout(120);
-        if ((await dbg(page)).perfectDodges > before) break; // got it
+        if ((await dbg(page)).perfectDodges > before) {
+          await page.waitForTimeout(450); // the monk dashes clear of his ghost
+          break;
+        }
         await page.waitForTimeout(1500); // whiffed — reset and try again
       }
-      await page.waitForTimeout(200); // ghost + slow-mo streak on screen
+      // capture NOW — the gold ghost fades in 0.8s of wall time
     },
   },
 
@@ -96,40 +123,62 @@ export default [
     name: "06-tiger-abbot",
     async run(page, game) {
       await waitMsgClear(page);
+      await game("heal");
       await game("teleportBeat", "boss"); // past the curtain — the fight is on
       await page.waitForFunction(
         () => window.__game.phase === "boss",
         undefined,
         { timeout: 20000 },
       );
-      await game("lockOn");
-      await page.waitForTimeout(800); // he closes the distance
-      await game("bossMove", "claw");
+      if ((await dbg(page)).lockOn) await game("lockOn"); // drop the stale court lock
+      await game("lockOn"); // lock the Abbot
+      // let him close in, THEN force the string so he fills the frame
       await page.waitForFunction(
         () => {
-          const b = window.__game.debug().boss;
-          return b.state === "attack" || (b.state === "windup" && b.move === "claw");
+          const d = window.__game.debug();
+          const b = d.enemies.find((e) => e.kind === "abbot");
+          return b && b.d < 5.5;
         },
+        undefined,
+        { timeout: 40000 },
+      );
+      await game("bossMove", "claw");
+      await page.waitForFunction(
+        () => window.__game.debug().boss.state === "attack",
         undefined,
         { timeout: 20000 },
       );
-      await page.waitForTimeout(500); // mid-string, boss plate up
+      await page.waitForTimeout(350); // mid-string, boss plate up
     },
   },
 
-  // 07 — PHASE 2: the sword is out, the whirlwind dash mid-pass
+  // 07 — PHASE 2: dodge THROUGH the whirlwind; the pass blurs past
   {
     name: "07-phase2-whirlwind",
     async run(page, game) {
       await waitMsgClear(page);
+      await game("heal");
+      if ((await dbg(page)).lockOn) await game("lockOn"); // steady chase cam for the pass
       await game("setBossPhase", 2);
       await game("bossMove", "whirlwind");
       await page.waitForFunction(
         () => window.__game.debug().boss.state === "dash",
         undefined,
         { timeout: 20000 },
-      ).catch(() => {});
-      await page.waitForTimeout(120); // mid-pass, the sword a gold blur
+      );
+      await game("dodgeInto"); // i-frames through the pass — maybe a perfect
+      await page.waitForFunction(
+        () => window.__game.debug().boss.state !== "dash",
+        undefined,
+        { timeout: 20000 },
+      );
+      // the SECOND pass: he charges straight at the camera, sword spinning
+      await page.waitForFunction(
+        () => window.__game.debug().boss.state === "dash",
+        undefined,
+        { timeout: 20000 },
+      );
+      // capture NOW — the whirlwind incoming
     },
   },
 
@@ -138,13 +187,44 @@ export default [
     name: "08-yaoguai-felled",
     async run(page, game) {
       await page.waitForTimeout(2500); // let the dash chain resolve
+      // if the whirlwind killed us, ride out the respawn and walk back in
+      await page
+        .waitForFunction(() => window.__game.phase !== "dead", undefined, { timeout: 20000 })
+        .catch(() => {});
+      if ((await dbg(page)).phase !== "boss") {
+        await game("teleportBeat", "boss");
+        await page.waitForFunction(
+          () => window.__game.phase === "boss",
+          undefined,
+          { timeout: 20000 },
+        );
+      }
+      await game("heal");
+      await game("teleport", 1, -129); // open floor, clear of the pillar ring
       await game("bossHp", 30);
       await game("giveFocus", 3);
-      // finish him with real swings
-      for (let i = 0; i < 14; i++) {
-        if ((await dbg(page)).phase === "results") break;
-        await page.mouse.click(640, 400);
-        await page.waitForTimeout(900);
+      await game("lockOn"); // 07 dropped the lock — facing matters
+      // let him reach us, then the SEAL holds him for the finishing slam
+      await page.waitForFunction(
+        () => {
+          const d = window.__game.debug();
+          const b = d.enemies.find((e) => e.kind === "abbot");
+          return d.phase === "results" || (b && b.d < 4.5);
+        },
+        undefined,
+        { timeout: 30000 },
+      );
+      await game("immobilize");
+      for (let i = 0; i < 12; i++) {
+        const d = await dbg(page);
+        if (d.phase === "results") break;
+        if (d.phase === "dead") break;
+        if (d.attack.t <= 0) {
+          if (d.focus >= 1) await game("heavy");
+          else await page.mouse.click(640, 400);
+        }
+        if (i % 3 === 2) await game("heal");
+        await page.waitForTimeout(400);
       }
       await page.waitForFunction(
         () => window.__game.phase === "results",

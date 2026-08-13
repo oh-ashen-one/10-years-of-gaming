@@ -49,9 +49,9 @@ if (!killedOne) errors.push("no lesser died to the staff string");
 let d = await dbg();
 if (d.focus <= 0) errors.push("lights never built focus");
 
-// immobilize: freeze one for real
+// immobilize: freeze one for real (stage a leap so it lands next to us)
 await game("lesserLeap");
-await page.waitForTimeout(300);
+await page.waitForTimeout(1200); // the leaper lands adjacent
 await page.keyboard.press("KeyQ");
 await page.waitForTimeout(400);
 d = await dbg();
@@ -72,7 +72,7 @@ if (d.hp < 100) {
   await page.keyboard.press("KeyF");
   await page.waitForTimeout(300);
 }
-await game("teleportBeat", "gate");
+await game("teleport", 3, -94); // right at the gate shrine
 await page.keyboard.press("KeyE");
 await page.waitForTimeout(400);
 d = await dbg();
@@ -85,10 +85,11 @@ await page.waitForFunction(() => window.__game.phase === "boss", undefined, { ti
 await game("lockOn");
 console.log("boss fight on");
 
-// REAL damage first: strings until he bleeds
+// REAL damage first: strings until he bleeds (heal through the claw strings)
 for (let i = 0; i < 14; i++) {
   d = await dbg();
   if (d.boss.hp < 700 || d.phase !== "boss") break;
+  if (i % 2 === 0) await game("heal"); // claw strings stun-lock; stay standing
   await page.mouse.click(640, 400);
   await page.waitForTimeout(1000);
 }
@@ -97,18 +98,20 @@ console.log("boss hp after real strings:", d.boss.hp, "player hp:", d.hp);
 if (d.boss.hp >= 700) errors.push("the boss never took real damage");
 
 // harness assist down to the finishing range, then real hits to the knee
+await game("heal");
 await game("bossHp", 70);
 await game("giveFocus", 3);
-if (d.hp < 50) {
-  await page.keyboard.press("KeyF"); // a sip if he mauled us
-  await page.waitForTimeout(300);
-}
-for (let i = 0; i < 30; i++) {
+await game("immobilize"); // the seal buys the first free heavies
+for (let i = 0; i < 40; i++) {
   d = await dbg();
   if (d.phase === "results") break;
   if (d.phase === "dead") break;
-  await page.mouse.click(640, 400);
-  await page.waitForTimeout(900);
+  if (i % 4 === 0) await game("heal"); // keep the script on its feet
+  if (d.attack.t <= 0) {
+    if (d.focus >= 1) await game("heavy");
+    else await page.mouse.click(640, 400);
+  }
+  await page.waitForTimeout(450);
 }
 d = await dbg();
 console.log("end phase:", d.phase, "deaths:", d.deaths, "longest combo:", d.longestCombo);
