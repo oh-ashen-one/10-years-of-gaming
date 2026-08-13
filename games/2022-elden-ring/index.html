@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GLOOMMOOR — a 2022 tale</title>
+    <style>
+      :root { color-scheme: dark; }
+      html, body {
+        margin: 0; padding: 0; width: 100%; height: 100%;
+        overflow: hidden; background: #0e1210;
+        font-family: Georgia, "Times New Roman", serif;
+        user-select: none; -webkit-user-select: none;
+      }
+      #app { position: fixed; inset: 0; }
+      #app canvas { display: block; }
+      #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+      #title {
+        position: fixed; inset: 0; z-index: 30; display: flex;
+        flex-direction: column; align-items: center; justify-content: center;
+        background: transparent; pointer-events: auto; cursor: pointer;
+      }
+      #title.hidden { display: none; }
+      .t-logo {
+        font-size: min(11vw, 118px); font-weight: 700; font-style: normal;
+        letter-spacing: 0.12em; line-height: 1; text-align: center;
+        color: #e8d8a8;
+        text-shadow:
+          0.03em 0.03em 0 #8a6a2a,
+          0.07em 0.07em 0 #0e1210;
+      }
+      .t-sub {
+        margin-top: 18px; color: #9aa88a; font-weight: 400;
+        letter-spacing: 0.5em; text-indent: 0.5em; font-size: clamp(10px, 1.5vw, 15px);
+        text-transform: uppercase; font-style: italic;
+      }
+      .t-start {
+        margin-top: 48px; color: #e8d8a8; font-weight: 400; font-style: italic;
+        font-size: clamp(14px, 2vw, 20px); letter-spacing: 0.3em;
+        padding: 12px 38px; border: 2px solid #8a6a2a;
+        background: rgba(14,18,16,0.6);
+        animation: pulse 1.6s steps(2) infinite;
+      }
+      @keyframes pulse { 50% { background: rgba(232,216,168,0.25); } }
+      .t-keys {
+        margin-top: 36px; color: #7a8878; font-size: 12px; letter-spacing: 0.14em;
+        text-align: center; line-height: 2.0; text-transform: uppercase;
+        font-family: "Segoe UI", Arial, sans-serif;
+      }
+      .t-keys b { color: #e8d8a8; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="hud"></div>
+    <div id="title">
+      <div class="t-logo">GLOOMMOOR</div>
+      <div class="t-sub">a tarnished tale beneath the gold &middot; 2022</div>
+      <div class="t-start">PRESS ENTER</div>
+      <div class="t-keys">
+        <b>WASD</b> move &nbsp; <b>SPACE</b> roll &nbsp; <b>SHIFT</b> sprint &nbsp; <b>LMB</b> light &nbsp; <b>RMB hold</b> heavy<br/>
+        <b>RMB tap</b> parry &nbsp; <b>F</b> guard &nbsp; <b>TAB</b> lock-on &nbsp; <b>Q</b> flask &nbsp; <b>E</b> interact
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
