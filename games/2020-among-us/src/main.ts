@@ -23,8 +23,8 @@ import { GameAudio } from "./audio";
 
 configureCelEnv(PAL, {
   sunDir: new THREE.Vector3(0.2, 0.9, 0.3), // the skylight: nearly overhead
-  sunTint: 0xffe9c8,
-  ambient: 0x8898c0,
+  sunTint: 0xfff2d8,
+  ambient: 0xa8b4d8,
   hazeNear: 40,
   hazeFar: 150,
 });
@@ -86,10 +86,6 @@ game.events = {
     if (victim) {
       const rig = beanRigs.get(victim.id);
       if (rig) rig.group.visible = false;
-      const body = buildBody(CREW_COLORS[victim.colorIdx].hex);
-      body.position.set(victim.x, 0, victim.z);
-      world.add(body);
-      bodyMeshes.set(victim.id, body);
       if (witnessed) hud.msg(`YOU SAW ${victim.name} GET KILLED!`, 2400, true);
     }
   },
@@ -329,12 +325,17 @@ const loop = new FrameLoop({
       rig.update(dt, time + c.id * 1.7, Math.hypot(c.tx - c.x, c.tz - c.z) > 1);
       if (rig.group.visible) rig.group.rotation.y = Math.atan2(c.tx - c.x, c.tz - c.z);
     }
-    // bodies respect the fog too
-    game.bodies.forEach((b, i) => {
-      const mesh = [...bodyMeshes.values()][i];
-      if (mesh) {
-        mesh.visible = fog.isVisible(p.x, p.z, b.x, b.z, game.visionR + 0.5) || game.phase !== "play";
+    // bodies: synced from game state (works for kills AND debug bodies),
+    // and they respect the fog
+    game.bodies.forEach((b) => {
+      let mesh = bodyMeshes.get(b.x * 1000 + b.z);
+      if (!mesh) {
+        mesh = buildBody(CREW_COLORS[b.colorIdx].hex);
+        mesh.position.set(b.x, 0, b.z);
+        world.add(mesh);
+        bodyMeshes.set(b.x * 1000 + b.z, mesh);
       }
+      mesh.visible = fog.isVisible(p.x, p.z, b.x, b.z, game.visionR + 0.5) || game.phase !== "play";
     });
 
     /* ---- meeting line reveal ---- */
@@ -365,7 +366,7 @@ const loop = new FrameLoop({
 
     // fog overlay: only while playing
     fog.enabled = game.phase === "play";
-    fog.update(p.x, p.z, game.visionR, camera, game.lightsOut ? 0.985 : 0.94);
+    fog.update(p.x, p.z, game.visionR, camera, game.lightsOut ? 0.975 : 0.9);
 
     /* ---- HUD ---- */
     hudTick += dt * 1000;

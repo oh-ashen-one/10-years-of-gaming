@@ -74,9 +74,15 @@ export function buildBean(color: number): BeanRig {
   };
 }
 
-/** the dead body: top half of the bean, bone out, on its side */
+/** the dead body: top half of the bean, bone out, blood pool under */
 export function buildBody(color: number): THREE.Group {
   const g = new THREE.Group();
+  const pool = new THREE.Mesh(
+    new THREE.CircleGeometry(0.85, 16).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: PAL.extra.blood, transparent: true, opacity: 0.85 }),
+  );
+  pool.position.y = 0.02;
+  g.add(pool);
   const mBody = makeCelMaterial({ color, rim: 0.5 });
   const half = new THREE.Mesh(
     new THREE.SphereGeometry(0.45, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2),

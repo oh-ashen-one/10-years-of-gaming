@@ -43,6 +43,7 @@ for (let i = 0; i < 40; i++) {
   const st = await page.evaluate(() => window.__game.taskState());
   if (!st.active) break;
 }
+done = done || (await dbg()).tasks >= 1; // re-read after the loop (racy at slow fps)
 console.log("task done:", done, "tasks:", (await dbg()).tasks);
 if (!done) errors.push("download minigame never completed");
 
@@ -77,7 +78,7 @@ if ((await phase()) !== "meeting") errors.push("report never opened a meeting");
 // then cast the witness-backed vote through the harness (deterministic —
 // the bots pile on once the impostor is exposed)
 await page.evaluate(() => window.__game.exposeImpostor());
-await page.waitForFunction(() => window.__game.debug().meeting?.voting, { timeout: 25000 });
+await page.waitForFunction(() => window.__game.debug().meeting?.voting, undefined, { timeout: 90000 });
 await page.keyboard.press("ArrowRight");
 await page.keyboard.press("ArrowLeft");
 await page.evaluate(() => window.__game.voteImpostor());

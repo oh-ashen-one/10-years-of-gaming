@@ -6,7 +6,7 @@
  */
 import * as THREE from "three";
 import { makeCelMaterial, col, hash1 } from "@tenyears/core";
-import { PAL } from "./palette";
+import { PAL, CREW_COLORS } from "./palette";
 import { buildBean } from "./beans";
 
 export interface SpaceRig {
@@ -83,7 +83,7 @@ export class EjectDrift {
 
   fire(colorIdx: number, from: THREE.Vector3): void {
     this.group.clear();
-    const rig = buildBean(CREW_HEX[colorIdx % CREW_HEX.length]);
+    const rig = buildBean(CREW_COLORS[colorIdx % CREW_COLORS.length].hex);
     rig.group.rotation.z = 0.6;
     this.group.add(rig.group);
     this.group.position.copy(from);
@@ -105,4 +105,4 @@ export class EjectDrift {
   }
 }
 
-const CREW_HEX = [0xe03a4a, 0x3a68e0, 0x3aa85a, 0xf08ac8, 0xf08a3a, 0xf0e05a, 0x3a3f4a, 0xe8ecf4];
+// crew colors come from the palette (CREW_COLORS)

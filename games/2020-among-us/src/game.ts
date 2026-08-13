@@ -107,7 +107,7 @@ export class Game {
     if (this.phase !== "title") return;
     // 9 bots + player; one bot is the impostor (never the same twice)
     for (let i = 0; i < 9; i++) {
-      const colorIdx = i + 1 <= 8 ? i + 1 : 0; // player is RED (idx 0)
+      const colorIdx = i + 1; // player is RED (idx 0); bots take 1..9
       const c = CREW_COLORS[colorIdx % CREW_COLORS.length];
       this.crew.push({
         id: i + 1, colorIdx: colorIdx % CREW_COLORS.length, name: c.name,
@@ -161,7 +161,7 @@ export class Game {
   /** nearest unreported body in report range */
   nearestBody(): Body | null {
     let best: Body | null = null;
-    let bd = 2.4;
+    let bd = 2.9;
     for (const b of this.bodies) {
       if (b.found) continue;
       const d = Math.hypot(b.x - this.player.x, b.z - this.player.z);
@@ -636,7 +636,7 @@ export class Game {
     if (!victim) return;
     victim.alive = false;
     this.bodies.push({
-      x: this.player.x + 1.6, z: this.player.z + 1.2,
+      x: this.player.x - 2.0, z: this.player.z - 1.5, // open floor, in frame
       colorIdx: victim.colorIdx, room: roomAt(this.player.x, this.player.z)?.name ?? "CAFETERIA",
       found: false,
     });

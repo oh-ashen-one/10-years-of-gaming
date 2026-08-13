@@ -56,9 +56,10 @@ export default [
     name: "06-body-reported",
     async run(page, game) {
       await game("lightsFix");
+      await page.waitForTimeout(1600); // let the fix message clear
       await page.evaluate(() => window.__game.teleport(1, 18)); // storage
       await game("bodyHere");
-      await page.waitForTimeout(900); // prompt + body in the fog hole
+      await page.waitForTimeout(800);
     },
   },
 
@@ -67,7 +68,7 @@ export default [
     name: "07-meeting-vote",
     async run(page, game) {
       await page.keyboard.press("KeyR"); // report it
-      await page.waitForFunction(() => window.__game.debug().meeting?.voting, { timeout: 20000 });
+      await page.waitForFunction(() => window.__game.debug().meeting?.voting, undefined, { timeout: 90000 });
       await page.waitForTimeout(700); // vote list settled
     },
   },

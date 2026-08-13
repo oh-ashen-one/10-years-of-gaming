@@ -78,17 +78,11 @@ export function buildShip(world: THREE.Group): ShipRig {
 
   /* ---- the skylight pool (cafeteria hero light) ---- */
   const skyPatch = new THREE.Mesh(
-    new THREE.CircleGeometry(3.2, 24).rotateX(-Math.PI / 2),
-    new THREE.MeshBasicMaterial({ color: PAL.sky.sunGlow, transparent: true, opacity: 0.35 }),
+    new THREE.CircleGeometry(3.4, 24).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: PAL.sky.sunGlow, transparent: true, opacity: 0.5 }),
   );
-  skyPatch.position.set(0, 0.05, -22);
+  skyPatch.position.set(0, 0.06, -22);
   g.add(skyPatch);
-  const skylight = new THREE.Mesh(
-    new THREE.BoxGeometry(4.4, 0.2, 4.4),
-    glassM,
-  );
-  skylight.position.set(0, WALL_H + 0.4, -22);
-  g.add(skylight);
 
   /* ---- consoles at stations ---- */
   const consM = makeCelMaterial({ color: PAL.extra.console, rim: 0.3 });

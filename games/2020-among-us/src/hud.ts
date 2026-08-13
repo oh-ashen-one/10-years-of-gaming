@@ -85,6 +85,8 @@ export class HUD {
         border: 2px solid ${C.ink}; }
       .meet-card .vote-hint { font-size: 12px; letter-spacing: 0.2em; color: ${C.accent};
         margin-top: 10px; }
+      #hud-results { position: absolute; inset: 0; display: none; align-items: center;
+        justify-content: center; background: rgba(10,12,24,0.5); }
       #hud-results .sub { color: ${C.accent}; letter-spacing: 0.35em; font-size: 12px; margin-bottom: 16px; }
       #hud-results .res-stats { font-size: 17px; line-height: 2.0; color: ${C.paper}; text-align: center; }
       #hud-results .res-stats b { color: ${RED}; }

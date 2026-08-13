@@ -83,4 +83,6 @@ export const CREW_COLORS: { name: string; hex: number }[] = [
   { name: "YELLOW", hex: PAL.extra.beanYellow },
   { name: "BLACK", hex: PAL.extra.beanBlack },
   { name: "WHITE", hex: PAL.extra.beanWhite },
+  { name: "CYAN", hex: 0x3ad8e0 },
+  { name: "PURPLE", hex: 0x9a5ae0 },
 ];
