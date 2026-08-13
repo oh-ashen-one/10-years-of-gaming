@@ -592,6 +592,7 @@ export class Game {
 
     if (this.phase === "finale") {
       this.finaleT += dt;
+      this.prompt = ""; // no prompts in the cinematic
       // it charges the closing doors
       const q = this.pursuer;
       const t = this.finaleT;

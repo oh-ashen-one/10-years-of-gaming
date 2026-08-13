@@ -202,7 +202,7 @@ export function buildHospital(world: THREE.Group, mat: THREE.ShaderMaterial): Wa
   wall(mat, W, 2, -46, 10, -46, world);      // director N
   wall(mat, W, 2, -54, 10, -54, world);      // director S
   wall(mat, W, 10, -54, 10, -46, world);     // director E
-  wall(mat, e.doorMetal, -2, -58, 2, -58, world); // the elevator end cap
+  wallWithGaps(mat, e.doorMetal, -2, -58, 2, -58, [[-0.6, 0.6]], "x", world); // the elevator doorway
   wall(mat, W, LIFT.x0, LIFT.z0, LIFT.x1, LIFT.z0, world); // shaft shell
   wall(mat, W, LIFT.x0, LIFT.z0, LIFT.x0, LIFT.z1, world);
   wall(mat, W, LIFT.x1, LIFT.z0, LIFT.x1, LIFT.z1, world);
@@ -274,16 +274,21 @@ export function buildHospital(world: THREE.Group, mat: THREE.ShaderMaterial): Wa
 
 export function buildFacade(world: THREE.Group, mat: THREE.ShaderMaterial): void {
   const e = PAL.extra;
-  world.add(makeBox(mat, 0x3a4046, 0, 6, 7.4, 24, 12, 0.5)); // the rain-streaked face
+  // the face reads as a FLAT silhouette — backlit faces get no cel light
+  const face = new THREE.Mesh(
+    new THREE.BoxGeometry(24, 12, 0.5),
+    new THREE.MeshBasicMaterial({ color: 0x1c242e }),
+  );
+  face.position.set(0, 6, 7.4);
+  world.add(face);
   for (let r = 0; r < 3; r++) {
     for (let ci = 0; ci < 6; ci++) {
-      const lit = r === 1 && ci === 4; // ONE window lit
+      const lit = r === 2 && ci === 5; // ONE window lit — top right, clear
       const win = new THREE.Mesh(
         new THREE.PlaneGeometry(1.4, 1.8),
         new THREE.MeshBasicMaterial({ color: lit ? e.cone : 0x0c1016 }),
       );
-      win.position.set(-8.75 + ci * 3.5, 3.4 + r * 3.1, 7.12);
-      win.rotation.y = Math.PI;
+      win.position.set(-8.75 + ci * 3.5, 3.4 + r * 3.1, 7.66); // proud of the face
       world.add(win);
     }
   }

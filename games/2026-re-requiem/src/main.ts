@@ -413,9 +413,9 @@ const loop = new FrameLoop({
     const p = game.player;
     if (game.phase === "title") {
       // the rain-streaked facade, one window lit
-      camera.position.set(Math.sin(time * 0.08) * 2.5, 2.4 + Math.sin(time * 0.11) * 0.3, 17);
-      camera.lookAt(0, 4.6, 7.4);
-      camera.fov = 52;
+      camera.position.set(Math.sin(time * 0.08) * 2.5, 3.0 + Math.sin(time * 0.11) * 0.3, 20);
+      camera.lookAt(0, 5.4, 7.4);
+      camera.fov = 50;
       camera.updateProjectionMatrix();
     } else {
       bobT += dt * (Math.hypot(move.x, move.z) > 0.05 ? (keys.has("ShiftLeft") ? 11 : 8) : 0);

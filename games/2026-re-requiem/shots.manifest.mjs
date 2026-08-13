@@ -61,7 +61,7 @@ export default [
     name: "05-fuse-puzzle",
     async run(page, game) {
       await game("openInv", false);
-      await game("teleport", 7.4, -14);
+      await game("teleport", 7.0, -14); // a half-step back — in reach, not in the wall
       await game("face", 8.6, -14);
       await page.waitForFunction(
         () => window.__game.debug().prompt.includes("FUSE"),
@@ -83,9 +83,12 @@ export default [
       await game("face", 2.8, -51);
       await game("interact"); // the crank turns
       await page.waitForTimeout(600);
-      await game("teleport", 8.2, -50);
+      await game("teleport", 8.6, -50); // close enough to slot the fuse
       await game("face", 9.7, -50);
       await game("interact"); // the fuse slots home
+      await page.waitForTimeout(300);
+      await game("teleport", 6.2, -50); // then step back for the lit-office frame
+      await game("face", 9.7, -50);
       await page.waitForTimeout(500); // POWER RESTORED — the office lit
     },
   },
@@ -112,7 +115,7 @@ export default [
       await game("face", 0, -58);
       await game("interact"); // GO
       await page.waitForFunction(
-        () => window.__game.debug().finaleT > 2.55, // the doors meet its arm
+        () => window.__game.debug().finaleT > 1.6, // doors open — it charges the gap
         undefined,
         { timeout: 30000 },
       );
