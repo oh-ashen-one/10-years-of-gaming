@@ -64,6 +64,42 @@ different movies.
 Feed the `/goal` prompt from `MASTER.md` §7, filling `{{N}}`, `{{YEAR}}`,
 `{{TITLE}}`, `{{SLUG}}`, `{{NN}}` from the fill table — one game per run.
 
+## The series
+
+Eleven games, one studio pipeline, eleven different movies — the hero
+frames, straight from each game's film test:
+
+![The series contact sheet — one hero shot per game, 2016–2026](shots/contact-sheet.png)
+
+| Year | Game | Slice | Port |
+|---|---|---|---|
+| 2016 | Pokémon GO | `games/2016-pokemon-go` | 5301 |
+| 2017 | PUBG | `games/2017-pubg` | 5302 |
+| 2018 | Fortnite | `games/2018-fortnite` | 5303 |
+| 2019 | Minecraft | `games/2019-minecraft` | 5304 |
+| 2020 | Among Us | `games/2020-among-us` | 5305 |
+| 2021 | Genshin Impact | `games/2021-genshin` | 5306 |
+| 2022 | Elden Ring | `games/2022-elden-ring` | 5307 |
+| 2023 | Baldur's Gate 3 | `games/2023-baldurs-gate` | 5308 |
+| 2024 | Black Myth: Wukong | `games/2024-black-myth` | 5309 |
+| 2025 | Clair Obscur: Expedition 33 | `games/2025-clair-obscur` | 5310 |
+| 2026 | Resident Evil Requiem | `games/2026-re-requiem` | 5311 |
+
+Individual hero shots live at `shots/<year>.png`; the sheet is regenerated
+with `node tools/contact-sheet.mjs`.
+
+## Running a game
+
+```bash
+npm install                            # once, at the repo root
+npm run dev --workspace games/<slug>   # e.g. games/2022-elden-ring
+# → http://localhost:5307 (the port from the table above; strict — one per game)
+```
+
+Each game also has `npm run shoot` (film test → `games/<slug>/shots/`) and a
+scripted `node tools/e2e.mjs` playthrough, both against its dev server.
+`npm run build` at the root typechecks and builds core + demo + all 11 games.
+
 ## Sources
 
 - Wikipedia, "YYYY in video games" (best-selling premium games by region, 2016–2026)
