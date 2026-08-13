@@ -69,7 +69,7 @@ export interface Recipe {
 export const RECIPES: Recipe[] = [
   { id: "planks", name: "Oak Planks ×4", out: "planks", n: 4, cost: { log: 1 }, grid: "2x2" },
   { id: "stick", name: "Sticks ×4", out: "stick", n: 4, cost: { planks: 2 }, grid: "2x2" },
-  { id: "table", name: "Crafting Table", out: "table", n: 1, cost: { planks: 4 }, grid: "3x3" },
+  { id: "table", name: "Crafting Table", out: "table", n: 1, cost: { planks: 4 }, grid: "2x2" },
   { id: "torch", name: "Torches ×4", out: "torch", n: 4, cost: { coal: 1, stick: 1 }, grid: "3x3" },
   { id: "woodpick", name: "Wooden Pickaxe", out: "woodpick", n: 1, cost: { planks: 3, stick: 2 }, grid: "3x3" },
   { id: "stonepick", name: "Stone Pickaxe", out: "stonepick", n: 1, cost: { cobble: 3, stick: 2 }, grid: "3x3" },
@@ -645,6 +645,7 @@ export class Game {
   /** jump the day clock (250 = dusk warning, 340 = night, 602 = dawn burn) */
   setTime(t: number): void {
     this.time = t;
+    if (t > DAY_END - 45) this.shelterWarned = true; // don't fire late warnings
   }
 
   teleport(x: number, z: number): void {
@@ -695,7 +696,7 @@ export class Game {
     this.blocksPlaced = Math.max(this.blocksPlaced, 57);
     this.mobsSlain = Math.max(this.mobsSlain, 9);
     this.shelterSecured = true;
-    this.time = DAWN_END + 6;
+    this.time = DAWN_END + 9; // past the dawn-burn beat → results next frame
     if (this.phase === "title") this.start();
   }
 }

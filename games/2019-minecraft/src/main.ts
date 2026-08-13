@@ -10,7 +10,8 @@ import * as THREE from "three";
 import { configureCelEnv, PostFX, FrameLoop, installHarness, col } from "@tenyears/core";
 import { PAL } from "./palette";
 import {
-  B, HALF, SPAWN, CAVE_CORE, generateWorld, getBlock, setDirtyHandler, surfaceY,
+  B, HALF, SPAWN, CAVE_CORE, generateWorld, getBlock, setBlock, setDirtyHandler, surfaceY,
+  addTorch, raycast,
 } from "./world";
 import { VoxelMesher, CrackOverlay } from "./world/mesher";
 import { Game, RECIPES, type Item, type MobType } from "./game";
@@ -203,7 +204,13 @@ document.getElementById("title")!.addEventListener("click", () => {
 // pointer-lock mouse look (arrows work too — keyboard-only stays viable)
 document.getElementById("app")!.addEventListener("click", () => {
   if (game.phase === "play" && !hud.craftOpen) {
-    document.getElementById("app")!.requestPointerLock?.();
+    // headless film-test pages can't take pointer lock — never error there
+    try {
+      const r = document.getElementById("app")!.requestPointerLock?.() as unknown;
+      if (r && typeof (r as Promise<void>).catch === "function") {
+        (r as Promise<void>).catch(() => {});
+      }
+    } catch { /* unsupported */ }
   }
 });
 window.addEventListener("mousemove", (e) => {
@@ -374,13 +381,14 @@ const loop = new FrameLoop({
     const held = viewmodel.getObjectByName("held") as THREE.Mesh;
     const sel = game.selectedItem();
     (held.material as THREE.MeshBasicMaterial).color.set(HELD_COLORS[sel] ?? 0xb08a54);
-    held.visible = game.phase === "play";
+    viewmodel.visible = game.phase === "play";
 
     /* ---- mobs ---- */
     for (const m of game.mobs) {
       const rig = mobRigs.get(m.id);
       if (!rig) continue;
-      rig.group.position.set(m.x - HALF, 0, m.z - HALF);
+      // rig groups are children of `world` — block coords, offset is free
+      rig.group.position.set(m.x, 0, m.z);
       rig.group.rotation.y = Math.atan2(p.x - m.x, p.z - m.z);
       rig.update(dt, time, m);
     }
@@ -395,8 +403,8 @@ const loop = new FrameLoop({
       const arr = game.arrows[i];
       if (arr) {
         a.g.visible = true;
-        a.g.position.set(arr.x - HALF, arr.y, arr.z - HALF);
-        a.g.lookAt(arr.x - HALF + arr.vx, arr.y + arr.vy, arr.z - HALF + arr.vz);
+        a.g.position.set(arr.x, arr.y, arr.z); // local = block coords
+        a.g.lookAt(arr.x - HALF + arr.vx, arr.y + arr.vy, arr.z - HALF + arr.vz); // world target
       } else {
         a.g.visible = false;
       }
@@ -451,9 +459,40 @@ installHarness({
       hp: p.hp,
       timeOfDay: game.time,
       mobs: game.mobs.length,
+      rigCount: mobRigs.size,
+      rigProbe: (() => {
+        const first = mobRigs.values().next().value;
+        if (!first) return null;
+        const v = new THREE.Vector3();
+        first.group.getWorldPosition(v);
+        return { world: v.toArray().map((n) => +n.toFixed(1)), visible: first.group.visible, inWorld: !!first.group.parent };
+      })(),
+      mobList: game.mobs.map((m) => ({ t: m.type, x: +m.x.toFixed(1), y: +m.y.toFixed(1), z: +m.z.toFixed(1) })),
       inv: Object.fromEntries(game.inv),
       mined: game.blocksMined,
       placed: game.blocksPlaced,
+      mobsSlain: game.mobsSlain,
+      nearestMob: (() => {
+        const p = game.player;
+        let bd = Infinity;
+        let bdot = 0;
+        for (const m of game.mobs) {
+          const dx = m.x - p.x;
+          const dz = m.z - p.z;
+          const d = Math.hypot(dx, dz);
+          if (d < bd) {
+            bd = d;
+            const v = game.view;
+            bdot = (dx * v.dx + dz * v.dz) / (d || 1);
+          }
+        }
+        return isFinite(bd) ? { d: +bd.toFixed(2), dot: +bdot.toFixed(2) } : null;
+      })(),
+      target: (() => {
+        const v = game.view;
+        const hit = raycast(v.ex, v.ey, v.ez, v.dx, v.dy, v.dz, 5);
+        return hit ? { x: hit.x, y: hit.y, z: hit.z, id: getBlock(hit.x, hit.y, hit.z) } : null;
+      })(),
       shelter: game.shelterSecured,
       pixelScale: loop.pixelScale,
     };
@@ -470,29 +509,127 @@ installHarness({
     yaw = Math.atan2(-dx, -dz);
     pitch = Math.atan2(dy, Math.hypot(dx, dz));
   },
+  /** stand before a tree with a clear line to its trunk (punch shot/e2e) */
+  aimNearestTree() {
+    const p = game.player;
+    // terrain height ignoring vegetation (surfaceY would sit us on canopies)
+    const terrainY = (x: number, z: number): number => {
+      for (let y = 30; y >= 1; y--) {
+        const id = getBlock(x, y, z);
+        if (id === B.GRASS || id === B.DIRT || id === B.STONE || id === B.COBBLE) return y;
+      }
+      return 1;
+    };
+    // trunk bases = a LOG sitting on soil, nearest first
+    const cands: { x: number; y: number; z: number; d: number }[] = [];
+    for (let x = Math.floor(p.x) - 24; x < p.x + 24; x++) {
+      for (let z = Math.floor(p.z) - 24; z < p.z + 24; z++) {
+        const gy = terrainY(x, z);
+        if (getBlock(x, gy + 1, z) === B.LOG) {
+          cands.push({ x, y: gy + 1, z, d: Math.hypot(x - p.x, z - p.z) });
+        }
+      }
+    }
+    cands.sort((a, b) => a.d - b.d);
+    const SPOTS = [[2.2, 0], [-2.2, 0], [0, 2.2], [0, -2.2], [1.6, 1.6], [-1.6, -1.6]];
+    for (const c of cands.slice(0, 8)) {
+      for (const [ox, oz] of SPOTS) {
+        const sx = c.x + ox;
+        const sz = c.z + oz;
+        const gy = terrainY(Math.floor(sx), Math.floor(sz)) + 1;
+        const ex = sx + 0.5;
+        const ey = gy + 1.62;
+        const ez = sz + 0.5;
+        const ddx = c.x + 0.5 - ex;
+        const ddy = c.y + 0.2 - ey; // low on the trunk — under the canopy
+        const ddz = c.z + 0.5 - ez;
+        const len = Math.hypot(ddx, ddy, ddz);
+        const hit = raycast(ex, ey, ez, ddx / len, ddy / len, ddz / len, 5);
+        if (hit && getBlock(hit.x, hit.y, hit.z) === B.LOG) {
+          p.x = ex;
+          p.z = ez;
+          p.y = ey - 1.62;
+          p.vy = 0;
+          yaw = Math.atan2(-ddx, -ddz);
+          pitch = Math.atan2(ddy, Math.hypot(ddx, ddz));
+          return;
+        }
+      }
+    }
+  },
   spawnMob(type: MobType, dist = 8) {
     const p = game.player;
     return game.spawnMob(type, p.x + Math.sin(yaw + Math.PI) * dist, p.z + Math.cos(yaw + Math.PI) * dist).id;
   },
   killAll() { game.debugKillAll(); },
+  /** a small arc of torches ahead of the player — torch pools for night shots */
+  torchRing() {
+    const p = game.player;
+    for (const [ox, oz] of [[-2.5, 3.5], [2.5, 3.5], [0, 6]]) {
+      const x = Math.floor(p.x + ox);
+      const z = Math.floor(p.z + oz);
+      for (let y = 30; y >= 1; y--) {
+        const id = getBlock(x, y, z);
+        if (id !== B.AIR && id !== B.LEAVES && id !== B.TORCH) {
+          setBlock(x, y + 1, z, B.TORCH);
+          addTorch(x, y + 1, z);
+          break;
+        }
+      }
+    }
+  },
   shelter() { game.debugShelter(); },
   cave() {
-    game.teleport(CAVE_CORE.x - 4, CAVE_CORE.z);
-  },
-  placeTorchAt(x: number, y: number, z: number) {
-    // direct torch placement for the cave shot (still the world's truth)
-    if (getBlock(x, y, z) === B.AIR) {
-      game.giveItem("torch", 1);
-      const sel = game.hotbarSel;
-      game.hotbarSel = 4; // torch slot
-      game.view.ex = x - 1.5;
-      game.view.ey = y + 1;
-      game.view.ez = z;
-      game.view.dx = 1;
-      game.view.dy = -0.4;
-      game.view.dz = 0;
-      game.placeSelected();
-      game.hotbarSel = sel;
+    // find the carved chamber's floor cells, light them, stand inside
+    const floors: { x: number; y: number; z: number }[] = [];
+    for (let x = CAVE_CORE.x - 12; x < CAVE_CORE.x + 10; x++) {
+      for (let z = CAVE_CORE.z - 8; z < CAVE_CORE.z + 8; z++) {
+        for (let y = 7; y < 16; y++) {
+          if (getBlock(x, y, z) === B.AIR && getBlock(x, y + 1, z) === B.AIR &&
+              getBlock(x, y - 1, z) !== B.AIR) {
+            floors.push({ x, y, z });
+          }
+        }
+      }
+    }
+    if (floors.length) {
+      // torches at three spread floor spots (direct world-truth placement)
+      const picks = [0, Math.floor(floors.length / 2), floors.length - 1];
+      for (const i of picks) {
+        const f = floors[i];
+        setBlock(f.x, f.y, f.z, B.TORCH);
+        addTorch(f.x, f.y, f.z);
+      }
+      const f = floors[Math.floor(floors.length / 2)];
+      game.player.x = f.x + 0.5;
+      game.player.z = f.z + 0.5;
+      game.player.y = f.y;
+      game.player.vy = 0;
+      // face an ore glint if one is near
+      let target: { x: number; y: number; z: number } | null = null;
+      let bd = 100;
+      for (let x = f.x - 8; x < f.x + 8; x++) {
+        for (let y = f.y - 2; y < f.y + 6; y++) {
+          for (let z = f.z - 8; z < f.z + 8; z++) {
+            const id = getBlock(x, y, z);
+            if (id === B.COAL || id === B.IRON) {
+              const d = Math.hypot(x - f.x, z - f.z);
+              if (d < bd) {
+                bd = d;
+                target = { x, y, z };
+              }
+            }
+          }
+        }
+      }
+      if (target) {
+        const p = game.player;
+        const dx = target.x + 0.5 - p.x;
+        const dy = target.y - (p.y + 1.62);
+        const dz = target.z + 0.5 - p.z;
+        yaw = Math.atan2(-dx, -dz);
+        pitch = Math.atan2(dy, Math.hypot(dx, dz));
+      }
     }
   },
   craft(id: string) { return game.craft(id); },

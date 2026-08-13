@@ -28,8 +28,8 @@ function blockColor(id: number, face: number): THREE.Color {
     case B.LOG: return col(face <= 1 ? e.logTop : e.log);
     case B.LEAVES: return col(e.leaves);
     case B.PLANKS: return col(e.planks);
-    case B.COAL: return col(e.stone).lerp(col(e.coal), 0.55);
-    case B.IRON: return col(e.stone).lerp(col(e.iron), 0.55);
+    case B.COAL: return col(e.stone).clone().lerp(col(e.coal), 0.55);
+    case B.IRON: return col(e.stone).clone().lerp(col(e.iron), 0.55);
     case B.TABLE: return col(e.table);
     case B.DOOR: return col(e.door);
     default: return col(0xff00ff);
@@ -38,14 +38,14 @@ function blockColor(id: number, face: number): THREE.Color {
 
 const FACE_SHADE = [1.0, 0.5, 0.8, 0.8, 0.66, 0.66];
 
-// face vertex offsets: [axis normal][4 corners]
+// face vertex offsets: [axis normal][4 corners], CCW seen from OUTSIDE
 const FACES: { n: [number, number, number]; c: [number, number, number][] }[] = [
-  { n: [0, 1, 0], c: [[0, 1, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]] },
-  { n: [0, -1, 0], c: [[0, 0, 1], [1, 0, 1], [1, 0, 0], [0, 0, 0]] },
-  { n: [1, 0, 0], c: [[1, 0, 0], [1, 0, 1], [1, 1, 1], [1, 1, 0]] },
-  { n: [-1, 0, 0], c: [[0, 0, 1], [0, 0, 0], [0, 1, 0], [0, 1, 1]] },
-  { n: [0, 0, 1], c: [[1, 0, 1], [0, 0, 1], [0, 1, 1], [1, 1, 1]] },
-  { n: [0, 0, -1], c: [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]] },
+  { n: [0, 1, 0], c: [[0, 1, 0], [0, 1, 1], [1, 1, 1], [1, 1, 0]] },
+  { n: [0, -1, 0], c: [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]] },
+  { n: [1, 0, 0], c: [[1, 0, 1], [1, 0, 0], [1, 1, 0], [1, 1, 1]] },
+  { n: [-1, 0, 0], c: [[0, 0, 0], [0, 0, 1], [0, 1, 1], [0, 1, 0]] },
+  { n: [0, 0, 1], c: [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]] },
+  { n: [0, 0, -1], c: [[1, 0, 0], [0, 0, 0], [0, 1, 0], [1, 1, 0]] },
 ];
 
 /* --------------------------------------------------------------- shader -- */
@@ -81,7 +81,7 @@ function voxelMaterial(): THREE.ShaderMaterial {
       ${CEL_LIGHT_GLSL}
       void main() {
         // sky term floors to indigo at night; torch glow overrides locally
-        float sky = mix(0.16, 1.0, uDayF);
+        float sky = mix(0.30, 1.0, uDayF);
         float l = max(sky, vL);
         l = floor(l * 4.0 + 0.5) / 4.0; // hard bands — crisp voxel flats
         vec3 tint = mix(uNightTint, vec3(1.0), uDayF);

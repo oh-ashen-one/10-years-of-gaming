@@ -12,16 +12,11 @@ export default [
     async run(page, game) {
       await game("autostart");
       await page.waitForTimeout(400);
-      // stand before the nearest grove tree, look at its trunk, hold LMB
       await page.evaluate(() => {
-        window.__game.teleport(60, 52);
-        window.__game.lookAt(60, 12, 48); // into the grove — trunk height
+        window.__game.teleport(60, 52);       // in the grove
+        window.__game.aimNearestTree();       // step to a trunk, face it
       });
       await page.waitForTimeout(400);
-      await page.evaluate(() => {
-        // aim exactly at the nearest solid block along view: probe a trunk
-        window.__game.lookAt(56, 11, 44);
-      });
       await page.mouse.down();
       await page.waitForTimeout(700); // mid-crack
     },
@@ -45,16 +40,8 @@ export default [
     async run(page, game) {
       await page.keyboard.press("KeyE"); // close menu
       await game("give", "stonepick", 1);
-      await game("cave");
-      await page.evaluate(() => {
-        // light the chamber: torches on the cave floor
-        const g = window.__game;
-        g.placeTorchAt(182, 9, 100);
-        g.placeTorchAt(179, 9, 103);
-        g.placeTorchAt(185, 9, 97);
-        g.lookAt(185, 11, 100); // into the chamber wall (ore glints)
-      });
-      await page.waitForTimeout(1200); // chunks rebuild
+      await game("cave"); // teleports into the chamber, lights it, faces ore
+      await page.waitForTimeout(1400); // chunks rebuild
     },
   },
 
@@ -64,39 +51,42 @@ export default [
     async run(page, game) {
       await game("teleport", 100, 158);
       await game("shelter"); // auto-builds the hut east of the player
-      await page.waitForTimeout(300);
-      await page.evaluate(() => window.__game.lookAt(108, 12, 158));
+      await page.evaluate(() => {
+        window.__game.teleport(103, 148); // due south, framing the hut face-on
+        window.__game.lookAt(103, 12, 158);
+      });
       await page.waitForTimeout(900);
     },
   },
 
-  // 06 — night siege: zombies shambling in out of the indigo
+  // 06 — night siege: zombies shambling into the torch pools
   {
     name: "06-night-siege",
     async run(page, game) {
+      await page.evaluate(() => window.__game.teleport(100, 175)); // open meadow, clear of the shelter
       await game("setTime", 345);
       await game("killAll");
       await page.evaluate(() => {
-        window.__game.spawnMob("zombie", 9);
-        window.__game.spawnMob("zombie", 12);
-        window.__game.spawnMob("skeleton", 14);
+        const g = window.__game;
+        const d = g.debug();
+        g.lookAt(d.player[0] - Math.sin(d.yaw) * 8, d.player[1] + 1, d.player[2] - Math.cos(d.yaw) * 8);
+        g.torchRing();
+        g.spawnMob("zombie", 7);
+        g.spawnMob("zombie", 10);
+        g.spawnMob("skeleton", 13);
       });
-      await page.waitForTimeout(1500); // they close in
+      await page.waitForTimeout(1600); // they close in through the light
     },
   },
 
-  // 07 — the creeper hiss: swollen, ticking, too close
+  // 07 — the creeper hiss: swollen, ticking, in the torch pool
   {
     name: "07-creeper-hiss",
     async run(page, game) {
       await game("killAll");
       await page.evaluate(() => {
-        window.__game.spawnMob("creeper", 2.2);
+        window.__game.spawnMob("creeper", 2.3);
       });
-      await page.waitForFunction(() => {
-        // wait for the hiss to start
-        return true;
-      }, { timeout: 3000 }).catch(() => {});
       await page.waitForTimeout(900); // mid-hiss swell
     },
   },
@@ -107,8 +97,8 @@ export default [
     async run(page, game) {
       await game("killAll");
       await page.evaluate(() => {
-        window.__game.spawnMob("zombie", 7);
-        window.__game.spawnMob("skeleton", 10);
+        window.__game.spawnMob("zombie", 6);
+        window.__game.spawnMob("skeleton", 9);
       });
       await game("setTime", 599);
       await page.waitForTimeout(1800); // burn flames + rising light
