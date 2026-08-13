@@ -57,7 +57,7 @@ different movies.
 | 2023 Baldur's Gate 3 | dialogue rolls → turn-based tollhouse fight | ✅ |
 | 2024 Black Myth: Wukong | staff combos → perfect dodge → Tiger Abbot | ✅ |
 | 2025 Clair Obscur | dodge/parry turn-based → Marionette boss | ✅ |
-| 2026 RE Requiem | flashlight ward → puzzle → pursuer chase | ⬜ |
+| 2026 RE Requiem | flashlight ward → puzzle → pursuer chase | ✅ |
 
 ### Building a game
 
